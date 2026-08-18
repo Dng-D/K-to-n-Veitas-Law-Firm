@@ -1,0 +1,22 @@
+# Project TODO
+
+- [x] Thiết kế hệ màu, typography và bố cục dashboard phù hợp nghiệp vụ tài chính – pháp lý bằng tiếng Việt.
+- [x] Tạo mô hình dữ liệu cho hồ sơ/hợp đồng, khách hàng, doanh thu, chi phí và giao dịch thu–chi.
+- [x] Áp dụng migration cơ sở dữ liệu cho các bảng nghiệp vụ và các quan hệ khóa ngoại cần thiết.
+- [x] Xây dựng nghiệp vụ tRPC có kiểm tra quyền admin/kế toán cho việc xem và quản lý dữ liệu tài chính.
+- [x] Xây dựng dashboard KPI thời gian thực: tổng doanh thu, thực thu, thực chi, lợi nhuận, công nợ phải thu và công nợ phải trả.
+- [x] Xây dựng trang quản lý hồ sơ/hợp đồng với thêm mới, chỉnh sửa, trạng thái, khách hàng, luật sư phụ trách và tiến độ thu tiền.
+- [x] Xây dựng sổ doanh thu với thông tin hóa đơn, ngày cung cấp dịch vụ, thuế GTGT đầu ra, thực thu và công nợ phải thu.
+- [x] Xây dựng sổ chi phí với nhà cung cấp, hóa đơn, thuế GTGT đầu vào, tình trạng thanh toán và tính chất chi phí.
+- [x] Xây dựng nhật ký thu–chi có liên kết hồ sơ/hợp đồng và chứng từ liên quan.
+- [x] Xây dựng báo cáo Q1–Q4, 6 tháng và năm với biểu đồ doanh thu, chi phí và dòng tiền.
+- [x] Cấu hình phân quyền hai vai trò chủ sở hữu (admin) và nhân viên kế toán, kèm các giới hạn thao tác phù hợp.
+- [x] Thiết kế responsive cho máy tính, máy tính bảng và điện thoại.
+- [x] Viết và chạy kiểm thử Vitest cho tính toán KPI, phân quyền và các luồng tạo dữ liệu quan trọng.
+- [x] Kiểm tra giao diện trên kích thước desktop và mobile; xử lý lỗi hiển thị nếu có.
+- [ ] Hoàn thiện hướng dẫn sử dụng, rà soát todo và lưu checkpoint bàn giao.
+- [x] Hoàn thiện ma trận phân quyền tRPC: nhân viên kế toán được xem/tạo/sửa số liệu; chỉ chủ sở hữu được xóa dữ liệu và quản trị quyền.
+- [x] Bổ sung kiểm thử Vitest xác nhận giới hạn quyền thao tác giữa chủ sở hữu và nhân viên kế toán.
+- [x] Bổ sung Vitest cho mutation tạo hồ sơ, doanh thu, chi phí và nhật ký thu–chi, gồm nhánh thành công và kiểm tra đầu vào không hợp lệ.
+- [x] Bổ sung Vitest cho nhánh đầu vào không hợp lệ của tạo hồ sơ, chi phí và nhật ký thu–chi.
+- [ ] Lưu checkpoint bàn giao sau khi hoàn tất rà soát chất lượng và todo.
