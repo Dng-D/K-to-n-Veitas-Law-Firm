@@ -103,9 +103,9 @@ Hệ thống có ba lớp vai trò: **chủ sở hữu**, **quản trị viên**
 
 Khi chủ sở hữu lưu lời mời, Veritas Finance Desk gửi email thực tế từ hộp thư Gmail của Công ty Luật TNHH Veritas. Trạng thái **đã gửi**, **đang chờ** hoặc **gửi lỗi** được hiển thị tại danh mục lời mời; nếu gửi lỗi, cần kiểm tra địa chỉ người nhận và cấu hình Gmail trước khi tạo lại lời mời.
 
-Chủ sở hữu có thể tìm theo tên, email hoặc vai trò và lọc theo vai trò, trạng thái quyền cơ bản/thẩm quyền phê duyệt, hoặc trạng thái lời mời. Với quản trị viên, trường **Thời hạn thẩm quyền** xác định mốc hết hiệu lực của tất cả quyền đang được cấp trong lần cập nhật đó. Để trống trường này khi cần cấp không thời hạn.
+Chủ sở hữu có thể tìm theo tên, email hoặc vai trò và lọc theo vai trò, trạng thái quyền cơ bản/thẩm quyền phê duyệt, hoặc trạng thái lời mời. Khi chọn vai trò **Quản trị viên**, mỗi quyền được chọn hiển thị một trường ngày–giờ riêng. Để trống trường của quyền nào thì quyền đó không thời hạn; chỉ quyền có ngày–giờ đã qua mới bị thu hồi.
 
-> Khi đến thời hạn, các quyền nhạy cảm không còn được chấp nhận ở máy chủ ngay cả khi giao diện chưa được làm mới. Tác vụ nền sẽ thu hồi quyền đã hết hạn, lưu nhật ký hành động `expire` và cập nhật danh mục người phê duyệt. Chủ sở hữu vẫn có thể cấp lại một quyền mới nếu có căn cứ ủy quyền.
+> Khi đến thời hạn, **chỉ quyền tương ứng** không còn được chấp nhận ở máy chủ ngay cả khi giao diện chưa được làm mới; các quyền khác của cùng người dùng vẫn hiệu lực cho đến thời hạn riêng của chúng. Tác vụ nền sẽ thu hồi quyền đã hết hạn, lưu nhật ký hành động `expire` và cập nhật danh mục người phê duyệt. Chủ sở hữu vẫn có thể cấp lại quyền mới nếu có căn cứ ủy quyền.
 
 Tác vụ thu hồi tự động của dự án có mã quản trị `TBbdeg8XKQMhAQ2AiUv88M`, chạy mỗi ngày lúc **00:05 UTC** (07:05 giờ Việt Nam) tại điểm xử lý `/api/scheduled/revoke-expired-access`. Chủ sở hữu có thể theo dõi, tạm dừng hoặc kích hoạt lại tác vụ trong khu vực quản trị tác vụ của dự án.
 
