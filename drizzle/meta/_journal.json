@@ -57,6 +57,13 @@
       "when": 1787073088907,
       "tag": "0007_smooth_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1787077755867,
+      "tag": "0008_classy_hawkeye",
+      "breakpoints": true
     }
   ]
 }

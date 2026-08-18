@@ -99,6 +99,14 @@ Hệ thống có ba lớp vai trò: **chủ sở hữu**, **quản trị viên**
 4. Người được mời đăng nhập bằng đúng email đã được mời. Hệ thống sẽ gắn vai trò và quyền đã cấp vào tài khoản tương ứng.
 5. Chủ sở hữu kiểm tra lại khu vực **Người phê duyệt được ủy quyền** và nhật ký ủy quyền, đặc biệt trước khi sử dụng luồng báo cáo hai cấp.
 
+### Email mời, tìm kiếm và quyền có thời hạn
+
+Khi chủ sở hữu lưu lời mời, Veritas Finance Desk gửi email thực tế từ hộp thư Gmail của Công ty Luật TNHH Veritas. Trạng thái **đã gửi**, **đang chờ** hoặc **gửi lỗi** được hiển thị tại danh mục lời mời; nếu gửi lỗi, cần kiểm tra địa chỉ người nhận và cấu hình Gmail trước khi tạo lại lời mời.
+
+Chủ sở hữu có thể tìm theo tên, email hoặc vai trò và lọc theo vai trò, trạng thái quyền cơ bản/thẩm quyền phê duyệt, hoặc trạng thái lời mời. Với quản trị viên, trường **Thời hạn thẩm quyền** xác định mốc hết hiệu lực của tất cả quyền đang được cấp trong lần cập nhật đó. Để trống trường này khi cần cấp không thời hạn.
+
+> Khi đến thời hạn, các quyền nhạy cảm không còn được chấp nhận ở máy chủ ngay cả khi giao diện chưa được làm mới. Tác vụ nền sẽ thu hồi quyền đã hết hạn, lưu nhật ký hành động `expire` và cập nhật danh mục người phê duyệt. Chủ sở hữu vẫn có thể cấp lại một quyền mới nếu có căn cứ ủy quyền.
+
 | Quyền có thể cấp cho quản trị viên | Phạm vi sử dụng |
 |---|---|
 | Phê duyệt kỳ | Phê duyệt hoặc từ chối yêu cầu khóa sổ tháng của người khác. |

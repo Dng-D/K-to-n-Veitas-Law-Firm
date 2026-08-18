@@ -19,6 +19,7 @@ import {
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { sendAccessInvitationEmail } from "./accessEmail";
 import { DELEGABLE_PERMISSIONS, type DelegablePermission } from "./permissions";
 
 export type AccountingPeriodStatus = "open" | "pending_approval" | "rejected" | "approved" | "locked";
@@ -37,10 +38,19 @@ function normalizeEmail(email: string) {
 function parsePermissions(value: string) {
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((permission): permission is DelegablePermission => DELEGABLE_PERMISSIONS.includes(permission)) : [];
+    const values = Array.isArray(parsed) ? parsed : parsed?.permissions;
+    return Array.isArray(values) ? values.filter((permission): permission is DelegablePermission => DELEGABLE_PERMISSIONS.includes(permission)) : [];
   } catch {
     return [];
   }
+}
+
+function parsePermissionExpiries(value: string): Partial<Record<DelegablePermission, Date | null>> {
+  try {
+    const entries = JSON.parse(value)?.permissionExpiries;
+    if (!entries || typeof entries !== "object") return {};
+    return Object.fromEntries(Object.entries(entries).filter(([permission]) => DELEGABLE_PERMISSIONS.includes(permission as DelegablePermission)).map(([permission, expiry]) => [permission, expiry ? new Date(String(expiry)) : null])) as Partial<Record<DelegablePermission, Date | null>>;
+  } catch { return {}; }
 }
 
 function isOwnerOpenId(openId: string) {
@@ -83,7 +93,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!invitation) return;
   const permissions = parsePermissions(invitation.permissionsJson);
   await db.update(users).set({ role: invitation.role }).where(eq(users.id, savedUser.id));
-  await synchronizeUserPermissions(savedUser.id, permissions, invitation.invitedBy, false);
+  await synchronizeUserPermissions(savedUser.id, permissions, invitation.invitedBy, false, invitation.grantExpiresAt, parsePermissionExpiries(invitation.permissionsJson));
   await db.update(accessInvitations).set({ status: "activated", activatedUserId: savedUser.id, activatedAt: new Date() }).where(eq(accessInvitations.id, invitation.id));
   await recordAccessAction({ action: "activate_invitation", targetUserId: savedUser.id, targetEmail: invitation.email, actorId: invitation.invitedBy, nextValue: invitation.role });
 }
@@ -100,8 +110,9 @@ export async function getUserAccessProfile(user: { id: number; openId: string; r
   if (isOwner) return { isOwner: true, role: "owner" as const, permissions: [...DELEGABLE_PERMISSIONS] };
   const db = await getDb();
   if (!db || user.role !== "admin") return { isOwner: false, role: user.role, permissions: [] as DelegablePermission[] };
-  const rows = await db.select({ permission: userPermissionGrants.permission }).from(userPermissionGrants).where(and(eq(userPermissionGrants.userId, user.id), isNull(userPermissionGrants.revokedAt)));
-  return { isOwner: false, role: user.role, permissions: rows.map(row => row.permission) as DelegablePermission[] };
+  const now = new Date();
+  const rows = await db.select({ permission: userPermissionGrants.permission, expiresAt: userPermissionGrants.expiresAt }).from(userPermissionGrants).where(and(eq(userPermissionGrants.userId, user.id), isNull(userPermissionGrants.revokedAt)));
+  return { isOwner: false, role: user.role, permissions: rows.filter(row => !row.expiresAt || row.expiresAt > now).map(row => row.permission) as DelegablePermission[] };
 }
 
 export async function listAccessDirectory() {
@@ -109,34 +120,40 @@ export async function listAccessDirectory() {
   if (!db) return { users: [], invitations: [], actions: [] };
   const [accountRows, grantRows, invitationRows, actionRows] = await Promise.all([
     db.select({ id: users.id, openId: users.openId, name: users.name, email: users.email, role: users.role, lastSignedIn: users.lastSignedIn }).from(users).orderBy(asc(users.name), asc(users.id)),
-    db.select({ userId: userPermissionGrants.userId, permission: userPermissionGrants.permission }).from(userPermissionGrants).where(isNull(userPermissionGrants.revokedAt)),
+    db.select({ userId: userPermissionGrants.userId, permission: userPermissionGrants.permission, expiresAt: userPermissionGrants.expiresAt }).from(userPermissionGrants).where(isNull(userPermissionGrants.revokedAt)),
     db.select().from(accessInvitations).orderBy(desc(accessInvitations.invitedAt)),
     db.select({ id: accessDelegationActions.id, action: accessDelegationActions.action, targetEmail: accessDelegationActions.targetEmail, permission: accessDelegationActions.permission, actorName: users.name, createdAt: accessDelegationActions.createdAt }).from(accessDelegationActions).leftJoin(users, eq(accessDelegationActions.actorId, users.id)).orderBy(desc(accessDelegationActions.createdAt)).limit(20),
   ]);
   return {
-    users: accountRows.map(account => ({ ...account, isOwner: isOwnerOpenId(account.openId), permissions: grantRows.filter(grant => grant.userId === account.id).map(grant => grant.permission) as DelegablePermission[] })),
-    invitations: invitationRows.map(invitation => ({ ...invitation, permissions: parsePermissions(invitation.permissionsJson) })),
+    users: accountRows.map(account => {
+      const grants = grantRows.filter(grant => grant.userId === account.id && (!grant.expiresAt || grant.expiresAt > new Date()));
+      return { ...account, isOwner: isOwnerOpenId(account.openId), permissions: grants.map(grant => grant.permission) as DelegablePermission[], grants: grants.map(grant => ({ permission: grant.permission as DelegablePermission, expiresAt: grant.expiresAt })) };
+    }),
+    invitations: invitationRows.map(invitation => ({ ...invitation, permissions: parsePermissions(invitation.permissionsJson), permissionExpiries: parsePermissionExpiries(invitation.permissionsJson) })),
     actions: actionRows,
   };
 }
 
-async function recordAccessAction(input: { action: "invite" | "role_change" | "grant" | "revoke" | "activate_invitation"; targetUserId?: number; targetEmail?: string; permission?: DelegablePermission; previousValue?: string; nextValue?: string; actorId: number }) {
+async function recordAccessAction(input: { action: "invite" | "role_change" | "grant" | "revoke" | "expire" | "activate_invitation"; targetUserId?: number; targetEmail?: string; permission?: DelegablePermission; previousValue?: string; nextValue?: string; actorId: number }) {
   const db = await getDb();
   if (!db) return;
   await db.insert(accessDelegationActions).values({ ...input, targetUserId: input.targetUserId ?? null, targetEmail: input.targetEmail ?? null, permission: input.permission ?? null, previousValue: input.previousValue ?? null, nextValue: input.nextValue ?? null });
 }
 
-async function synchronizeUserPermissions(userId: number, permissions: DelegablePermission[], actorId: number, recordActions = true) {
+async function synchronizeUserPermissions(userId: number, permissions: DelegablePermission[], actorId: number, recordActions = true, expiresAt?: Date | null, permissionExpiries?: Partial<Record<DelegablePermission, Date | null>>) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   const wanted = new Set(permissions);
   const existing = await db.select().from(userPermissionGrants).where(eq(userPermissionGrants.userId, userId));
   for (const permission of DELEGABLE_PERMISSIONS) {
     const grant = existing.find(row => row.permission === permission);
+    const permissionExpiry = permissionExpiries?.[permission] ?? expiresAt ?? null;
     if (wanted.has(permission) && (!grant || grant.revokedAt)) {
-      if (grant) await db.update(userPermissionGrants).set({ revokedAt: null, revokedBy: null, grantedBy: actorId, grantedAt: new Date() }).where(eq(userPermissionGrants.id, grant.id));
-      else await db.insert(userPermissionGrants).values({ userId, permission, grantedBy: actorId });
-      if (recordActions) await recordAccessAction({ action: "grant", targetUserId: userId, permission, actorId, nextValue: "active" });
+      if (grant) await db.update(userPermissionGrants).set({ revokedAt: null, revokedBy: null, grantedBy: actorId, grantedAt: new Date(), expiresAt: permissionExpiry }).where(eq(userPermissionGrants.id, grant.id));
+      else await db.insert(userPermissionGrants).values({ userId, permission, grantedBy: actorId, expiresAt: permissionExpiry });
+      if (recordActions) await recordAccessAction({ action: "grant", targetUserId: userId, permission, actorId, nextValue: permissionExpiry ? `active_until:${permissionExpiry.toISOString()}` : "active_indefinitely" });
+    } else if (wanted.has(permission) && grant && !grant.revokedAt) {
+      await db.update(userPermissionGrants).set({ expiresAt: permissionExpiry }).where(eq(userPermissionGrants.id, grant.id));
     }
     if (!wanted.has(permission) && grant && !grant.revokedAt) {
       await db.update(userPermissionGrants).set({ revokedAt: new Date(), revokedBy: actorId }).where(eq(userPermissionGrants.id, grant.id));
@@ -145,7 +162,7 @@ async function synchronizeUserPermissions(userId: number, permissions: Delegable
   }
 }
 
-export async function setUserAccessProfile(input: { userId: number; role: "admin" | "staff"; permissions: DelegablePermission[]; actorId: number }) {
+export async function setUserAccessProfile(input: { userId: number; role: "admin" | "staff"; permissions: DelegablePermission[]; actorId: number; expiresAt?: Date | null; permissionExpiries?: Partial<Record<DelegablePermission, Date | null>> }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   const target = (await db.select().from(users).where(eq(users.id, input.userId)).limit(1))[0];
@@ -155,11 +172,11 @@ export async function setUserAccessProfile(input: { userId: number; role: "admin
   const cleanPermissions = Array.from(new Set(input.permissions));
   await db.update(users).set({ role: input.role }).where(eq(users.id, input.userId));
   await recordAccessAction({ action: "role_change", targetUserId: input.userId, targetEmail: target.email ?? undefined, actorId: input.actorId, previousValue: target.role, nextValue: input.role });
-  await synchronizeUserPermissions(input.userId, input.role === "admin" ? cleanPermissions : [], input.actorId);
+  await synchronizeUserPermissions(input.userId, input.role === "admin" ? cleanPermissions : [], input.actorId, true, input.expiresAt, input.permissionExpiries);
   return { success: true };
 }
 
-export async function inviteUserByEmail(input: { email: string; role: "admin" | "staff"; permissions: DelegablePermission[]; actorId: number }) {
+export async function inviteUserByEmail(input: { email: string; role: "admin" | "staff"; permissions: DelegablePermission[]; actorId: number; expiresAt?: Date | null; permissionExpiries?: Partial<Record<DelegablePermission, Date | null>> }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   const email = normalizeEmail(input.email);
@@ -168,12 +185,32 @@ export async function inviteUserByEmail(input: { email: string; role: "admin" | 
   const existingUser = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
   if (existingUser) {
     if (isOwnerOpenId(existingUser.openId)) throw new Error("Không thể thay đổi tài khoản chủ sở hữu bằng lời mời email.");
-    await setUserAccessProfile({ userId: existingUser.id, role: input.role, permissions, actorId: input.actorId });
+    await setUserAccessProfile({ userId: existingUser.id, role: input.role, permissions, actorId: input.actorId, expiresAt: input.expiresAt, permissionExpiries: input.permissionExpiries });
     return { state: "updated_existing" as const };
   }
-  await db.insert(accessInvitations).values({ email, role: input.role, permissionsJson: JSON.stringify(permissions), status: "pending", invitedBy: input.actorId }).onDuplicateKeyUpdate({ set: { role: input.role, permissionsJson: JSON.stringify(permissions), status: "pending", invitedBy: input.actorId, invitedAt: new Date(), activatedUserId: null, activatedAt: null } });
-  await recordAccessAction({ action: "invite", targetEmail: email, actorId: input.actorId, nextValue: `${input.role}:${permissions.join(",")}` });
-  return { state: "pending_email_login" as const };
+  const invitationPermissions = JSON.stringify({ permissions, permissionExpiries: Object.fromEntries(Object.entries(input.permissionExpiries ?? {}).map(([permission, expiry]) => [permission, expiry?.toISOString() ?? null])) });
+  await db.insert(accessInvitations).values({ email, role: input.role, permissionsJson: invitationPermissions, grantExpiresAt: input.expiresAt ?? null, status: "pending", invitedBy: input.actorId }).onDuplicateKeyUpdate({ set: { role: input.role, permissionsJson: invitationPermissions, grantExpiresAt: input.expiresAt ?? null, status: "pending", invitedBy: input.actorId, invitedAt: new Date(), activatedUserId: null, activatedAt: null, emailDeliveryStatus: "pending", emailSentAt: null, emailError: null } });
+  let emailStatus: "sent" | "failed" = "sent";
+  let emailError: string | null = null;
+  try { await sendAccessInvitationEmail({ recipient: email, role: input.role, permissions, expiresAt: input.expiresAt }); }
+  catch (error) { emailStatus = "failed"; emailError = error instanceof Error ? error.message.slice(0, 1000) : "Không thể gửi email mời."; }
+  await db.update(accessInvitations).set({ emailDeliveryStatus: emailStatus, emailSentAt: emailStatus === "sent" ? new Date() : null, emailError }).where(eq(accessInvitations.email, email));
+  await recordAccessAction({ action: "invite", targetEmail: email, actorId: input.actorId, nextValue: `${input.role}:${permissions.join(",")}:${emailStatus}` });
+  return { state: "pending_email_login" as const, emailStatus, emailError };
+}
+
+export async function revokeExpiredPermissions() {
+  const db = await getDb();
+  if (!db) return { revoked: 0 };
+  const now = new Date();
+  const expired = (await db.select().from(userPermissionGrants).where(isNull(userPermissionGrants.revokedAt))).filter(grant => !!grant.expiresAt && grant.expiresAt <= now);
+  if (!expired.length) return { revoked: 0 };
+  const owner = (await db.select().from(users).where(eq(users.openId, ENV.ownerOpenId)).limit(1))[0];
+  for (const grant of expired) {
+    await db.update(userPermissionGrants).set({ revokedAt: now, revokedBy: owner?.id ?? null }).where(eq(userPermissionGrants.id, grant.id));
+    if (owner) await recordAccessAction({ action: "expire", targetUserId: grant.userId, permission: grant.permission as DelegablePermission, actorId: owner.id, previousValue: grant.expiresAt?.toISOString(), nextValue: "expired" });
+  }
+  return { revoked: expired.length };
 }
 
 export function toPeriodKey(date: Date) {

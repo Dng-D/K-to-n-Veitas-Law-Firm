@@ -61,3 +61,11 @@
 - [x] Khôi phục xác thực GitHub cho kho Dng-D/K-to-n-Veitas-Law-Firm và xác minh commit phân quyền đã xuất hiện trên nhánh main.
 - [x] Kiểm tra responsive các trang phân quyền, khóa sổ và phê duyệt báo cáo ở khung nhìn máy tính bảng và di động; cập nhật biên bản QA theo từng breakpoint.
 - [x] Lưu checkpoint bàn giao cuối sau khi hoàn thành kiểm tra responsive, cập nhật QA và đồng bộ GitHub.
+- [x] Rà soát cơ chế gửi email, cấu trúc lời mời và các điểm tích hợp phù hợp cho thông báo mời nhân sự thực tế.
+- [x] Kết nối Gmail của doanh nghiệp để gửi thư mời nhân sự thực tế từ hệ thống.
+- [x] Tạo Mật khẩu ứng dụng Gmail chuyên dùng cho Veritas Finance Desk và xác minh SMTP.
+- [x] Bổ sung tìm kiếm, bộ lọc vai trò và trạng thái quyền vào trang quản lý phân quyền.
+- [x] Thiết kế và triển khai thời hạn cho từng quyền được cấp, bao gồm tự động vô hiệu hóa khi hết hạn và nhật ký thu hồi.
+- [ ] Nâng cấp API và giao diện để thiết lập thời hạn riêng cho từng thẩm quyền được cấp, đồng thời kiểm thử tình huống một quyền hết hạn độc lập.
+- [ ] Tạo, kích hoạt và ghi nhận tác vụ nền production gọi điểm thu hồi quyền quá hạn; xác minh tác vụ có thể vận hành tự động.
+- [ ] Bổ sung kiểm thử, QA responsive, hướng dẫn vận hành và đồng bộ phiên bản cho các tính năng quản trị quyền mới.

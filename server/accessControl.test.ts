@@ -33,10 +33,16 @@ describe("finance.accessControl", () => {
 
   it("cho phép chủ sở hữu mời bằng email và ủy quyền cụ thể cho quản trị viên", async () => {
     const caller = appRouter.createCaller(context("owner", "owner-open-id"));
+    const expiresAt = Date.UTC(2026, 11, 31, 16, 59, 59);
     await expect(caller.finance.accessControl.directory()).resolves.toHaveLength(1);
-    await expect(caller.finance.accessControl.inviteByEmail({ email: "ke.toan@veritas.test", role: "admin", permissions: ["approve_month_close", "lock_month_close"] })).resolves.toMatchObject({ success: true });
-    await expect(caller.finance.accessControl.setUserAccess({ userId: 3, role: "admin", permissions: ["approve_report_level_1"] })).resolves.toEqual({ success: true });
-    expect(vi.mocked(db.inviteUserByEmail)).toHaveBeenCalledWith({ email: "ke.toan@veritas.test", role: "admin", permissions: ["approve_month_close", "lock_month_close"], actorId: 1 });
-    expect(vi.mocked(db.setUserAccessProfile)).toHaveBeenCalledWith({ userId: 3, role: "admin", permissions: ["approve_report_level_1"], actorId: 1 });
+    await expect(caller.finance.accessControl.inviteByEmail({ email: "ke.toan@veritas.test", role: "admin", permissions: ["approve_month_close", "lock_month_close"], expiresAt })).resolves.toMatchObject({ success: true });
+    await expect(caller.finance.accessControl.setUserAccess({ userId: 3, role: "admin", permissions: ["approve_report_level_1"], expiresAt })).resolves.toEqual({ success: true });
+    expect(vi.mocked(db.inviteUserByEmail)).toHaveBeenCalledWith({ email: "ke.toan@veritas.test", role: "admin", permissions: ["approve_month_close", "lock_month_close"], expiresAt: new Date(expiresAt), actorId: 1 });
+    expect(vi.mocked(db.setUserAccessProfile)).toHaveBeenCalledWith({ userId: 3, role: "admin", permissions: ["approve_report_level_1"], expiresAt: new Date(expiresAt), actorId: 1 });
+  });
+
+  it("chỉ nhận thời hạn hợp lệ là thời điểm Unix dương", async () => {
+    const caller = appRouter.createCaller(context("owner", "owner-open-id"));
+    await expect(caller.finance.accessControl.inviteByEmail({ email: "ke.toan@veritas.test", role: "admin", permissions: [], expiresAt: -1 })).rejects.toBeTruthy();
   });
 });

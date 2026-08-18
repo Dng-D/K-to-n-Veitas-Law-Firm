@@ -28,6 +28,7 @@ export const userPermissionGrants = mysqlTable("userPermissionGrants", {
   permission: mysqlEnum("permission", ["approve_month_close", "lock_month_close", "reopen_month_close", "approve_report_level_1", "approve_report_level_2", "reject_report", "delete_financial_data"]).notNull(),
   grantedBy: int("grantedBy").notNull().references(() => users.id),
   grantedAt: timestamp("grantedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"),
   revokedBy: int("revokedBy").references(() => users.id),
   revokedAt: timestamp("revokedAt"),
 }, table => [uniqueIndex("user_permission_grant_unique").on(table.userId, table.permission)]);
@@ -37,7 +38,11 @@ export const accessInvitations = mysqlTable("accessInvitations", {
   email: varchar("email", { length: 320 }).notNull(),
   role: mysqlEnum("role", ["admin", "staff"]).default("staff").notNull(),
   permissionsJson: text("permissionsJson").notNull(),
+  grantExpiresAt: timestamp("grantExpiresAt"),
   status: mysqlEnum("status", ["pending", "activated", "revoked"]).default("pending").notNull(),
+  emailDeliveryStatus: mysqlEnum("emailDeliveryStatus", ["pending", "sent", "failed"]).default("pending").notNull(),
+  emailSentAt: timestamp("emailSentAt"),
+  emailError: text("emailError"),
   invitedBy: int("invitedBy").notNull().references(() => users.id),
   invitedAt: timestamp("invitedAt").defaultNow().notNull(),
   activatedUserId: int("activatedUserId").references(() => users.id),
@@ -46,7 +51,7 @@ export const accessInvitations = mysqlTable("accessInvitations", {
 
 export const accessDelegationActions = mysqlTable("accessDelegationActions", {
   id: int("id").autoincrement().primaryKey(),
-  action: mysqlEnum("action", ["invite", "role_change", "grant", "revoke", "activate_invitation"]).notNull(),
+  action: mysqlEnum("action", ["invite", "role_change", "grant", "revoke", "expire", "activate_invitation"]).notNull(),
   targetUserId: int("targetUserId").references(() => users.id),
   targetEmail: varchar("targetEmail", { length: 320 }),
   permission: varchar("permission", { length: 64 }),
