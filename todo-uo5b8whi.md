@@ -49,5 +49,5 @@
 - [x] Bổ sung kiểm thử, hướng dẫn vận hành và kiểm tra responsive cho các chức năng mới.
 - [x] Cho phép chủ sở hữu chỉ định các tài khoản quản trị viên phê duyệt trong giao diện quyền truy cập, tạo đủ người độc lập cho luồng báo cáo hai cấp.
 - [x] Giới hạn API danh sách và cập nhật vai trò chỉ cho chủ sở hữu dự án, không cho quản trị viên thông thường thay đổi quyền người dùng.
-- [ ] Đồng bộ phiên bản phê duyệt hai cấp, hồ sơ xác nhận nội bộ và nhắc chốt sổ cuối tháng lên kho GitHub Veritas.
-- [ ] Lưu SHA commit và checkpoint bàn giao sau khi đẩy thành công phiên bản nâng cấp này lên GitHub.
+- [x] Đồng bộ phiên bản phê duyệt hai cấp, hồ sơ xác nhận nội bộ và nhắc chốt sổ cuối tháng lên kho GitHub Veritas (commit `a792fc2`).
+- [ ] Lưu checkpoint bàn giao sau khi đẩy thành công phiên bản nâng cấp này lên GitHub.
