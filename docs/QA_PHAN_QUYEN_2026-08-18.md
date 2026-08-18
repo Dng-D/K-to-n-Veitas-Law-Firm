@@ -15,3 +15,5 @@ Tác vụ production `TBbdeg8XKQMhAQ2AiUv88M` đã chạy thành công lúc 18:4
 Chủ sở hữu đã xác nhận yêu cầu đặt thời hạn độc lập theo từng thẩm quyền. Lớp dữ liệu và API đã nhận `permissionExpiries`; biểu mẫu quản trị đang được hoàn thiện để hiển thị lựa chọn này trực tiếp cho từng quyền.
 
 Biểu mẫu hoàn thiện cho phép chọn từng quyền và nhập thời hạn riêng bên cạnh quyền đó, áp dụng cho cả lời mời Gmail lẫn quản trị viên hiện hữu. Kiểm tra ngày 19/08/2026 tại **1280 × 720** và **375 × 812** cho thấy bố cục không tràn ngang; toàn bộ 26 kiểm thử Vitest và kiểm tra TypeScript đạt.
+
+Phiên bản giao diện thời hạn riêng từng quyền được đồng bộ lên nhánh `main` của GitHub bằng commit `4b0e4f5`; checkpoint triển khai tương ứng là `0fc8f522`.

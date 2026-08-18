@@ -76,4 +76,5 @@
 - [x] Bổ sung kiểm thử, QA responsive, hướng dẫn vận hành và đồng bộ phiên bản cho các tính năng quản trị quyền mới.
 - [x] Cập nhật hướng dẫn vận hành cho thời hạn riêng theo từng quyền, bao gồm nguyên tắc quyền hết hạn độc lập.
 - [x] Lưu checkpoint và đồng bộ phiên bản cuối của giao diện thời hạn riêng theo từng quyền.
-- [ ] Commit, push GitHub và xác nhận trạng thái sạch cho phiên bản thời hạn riêng từng quyền.
+- [x] Commit, push GitHub và xác nhận trạng thái sạch cho phiên bản thời hạn riêng từng quyền.
+- [ ] Commit và push phần cập nhật biên bản cuối; xác nhận working tree sạch và mã GitHub khớp checkpoint bàn giao.
