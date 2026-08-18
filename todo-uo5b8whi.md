@@ -57,4 +57,7 @@
 - [x] Bổ sung quyền chi tiết cho quản trị viên do chủ sở hữu cấp, bao gồm quyền phê duyệt cấp 1, cấp 2, khóa sổ, mở sổ và quản trị dữ liệu.
 - [x] Tạo danh mục theo dõi các tài khoản đang có thẩm quyền phê duyệt, quyền được ủy quyền và lịch sử thay đổi.
 - [x] Sửa kiểm soát máy chủ để chủ sở hữu có toàn quyền; quản trị viên chỉ được thực hiện đúng các quyền đã được cấp.
-- [ ] Bổ sung kiểm thử phân quyền, kiểm tra responsive, đồng bộ GitHub và lưu checkpoint bàn giao.
+- [x] Bổ sung kiểm thử phân quyền, kiểm tra responsive, đồng bộ GitHub và lưu checkpoint bàn giao.
+- [x] Khôi phục xác thực GitHub cho kho Dng-D/K-to-n-Veitas-Law-Firm và xác minh commit phân quyền đã xuất hiện trên nhánh main.
+- [x] Kiểm tra responsive các trang phân quyền, khóa sổ và phê duyệt báo cáo ở khung nhìn máy tính bảng và di động; cập nhật biên bản QA theo từng breakpoint.
+- [ ] Lưu checkpoint bàn giao cuối sau khi hoàn thành kiểm tra responsive, cập nhật QA và đồng bộ GitHub.
