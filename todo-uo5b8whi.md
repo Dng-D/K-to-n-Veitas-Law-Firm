@@ -9,6 +9,6 @@
 - [ ] Bổ sung kiểm thử Vitest cho các phép tính tổng hợp, giới hạn dữ liệu và các thủ tục cập nhật giao dịch.
 - [ ] Rà soát căn cứ áp dụng chế độ kế toán và nêu rõ giới hạn pháp lý của các báo cáo nội bộ.
 - [ ] Xác minh phương thức kết nối WordPress.com, chỉ thực hiện truyền dữ liệu sau khi có quyền truy cập và xác nhận thao tác gửi.
-- [ ] Kiểm tra kho GitHub hiện có hoặc tạo kho riêng tư, sau đó đẩy mã nguồn và tài liệu triển khai.
+- [x] Kiểm tra kho GitHub hiện có hoặc tạo kho riêng tư, sau đó đẩy mã nguồn và tài liệu triển khai.
 - [ ] Kiểm thử hiển thị trên máy tính và thiết bị di động, cập nhật trạng thái hoàn thành trong danh sách này.
-- [ ] Xác minh quyền ghi vào kho GitHub Dng-D/K-to-n-Veitas-Law-Firm, kiểm tra tệp nhạy cảm và đồng bộ phiên bản dự án hiện tại bằng một commit có mô tả rõ ràng.
+- [x] Xác minh quyền ghi vào kho GitHub Dng-D/K-to-n-Veitas-Law-Firm, kiểm tra tệp nhạy cảm và đồng bộ phiên bản dự án hiện tại bằng một commit có mô tả rõ ràng.
