@@ -15,7 +15,7 @@ import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
 function accountingContext(): TrpcContext {
-  return { user: { id: 42, openId: "attachment-tester", name: "Kế toán", email: "test@veritas.test", loginMethod: "manus", role: "user", createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() }, req: { protocol: "https", headers: {} } as TrpcContext["req"], res: { clearCookie: () => undefined } as TrpcContext["res"] };
+  return { user: { id: 42, openId: "attachment-tester", name: "Kế toán", email: "test@veritas.test", loginMethod: "manus", role: "staff", createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() }, req: { protocol: "https", headers: {} } as TrpcContext["req"], res: { clearCookie: () => undefined } as TrpcContext["res"] };
 }
 
 describe("cash attachment upload", () => {

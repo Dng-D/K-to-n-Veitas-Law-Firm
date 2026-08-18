@@ -51,3 +51,10 @@
 - [x] Giới hạn API danh sách và cập nhật vai trò chỉ cho chủ sở hữu dự án, không cho quản trị viên thông thường thay đổi quyền người dùng.
 - [x] Đồng bộ phiên bản phê duyệt hai cấp, hồ sơ xác nhận nội bộ và nhắc chốt sổ cuối tháng lên kho GitHub Veritas (commit `a792fc2`).
 - [x] Lưu checkpoint bàn giao sau khi đẩy thành công phiên bản nâng cấp này lên GitHub.
+- [x] Rà soát cấu trúc người dùng, vai trò và các điểm kiểm soát hiện hữu để chuẩn bị phân quyền chi tiết theo email.
+- [x] Thiết kế vai trò riêng cho chủ sở hữu, quản trị viên và nhân sự; xác định tập quyền có thể ủy quyền, nguyên tắc không tự nâng quyền và nhật ký thay đổi.
+- [x] Bổ sung cơ chế mời/định danh nhân sự theo email và gán vai trò bởi chủ sở hữu.
+- [x] Bổ sung quyền chi tiết cho quản trị viên do chủ sở hữu cấp, bao gồm quyền phê duyệt cấp 1, cấp 2, khóa sổ, mở sổ và quản trị dữ liệu.
+- [x] Tạo danh mục theo dõi các tài khoản đang có thẩm quyền phê duyệt, quyền được ủy quyền và lịch sử thay đổi.
+- [x] Sửa kiểm soát máy chủ để chủ sở hữu có toàn quyền; quản trị viên chỉ được thực hiện đúng các quyền đã được cấp.
+- [ ] Bổ sung kiểm thử phân quyền, kiểm tra responsive, đồng bộ GitHub và lưu checkpoint bàn giao.

@@ -6,6 +6,7 @@ import {
   mysqlTable,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -15,10 +16,44 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["admin", "user"]).default("user").notNull(),
+  role: mysqlEnum("role", ["owner", "admin", "staff"]).default("staff").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+});
+
+export const userPermissionGrants = mysqlTable("userPermissionGrants", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  permission: mysqlEnum("permission", ["approve_month_close", "lock_month_close", "reopen_month_close", "approve_report_level_1", "approve_report_level_2", "reject_report", "delete_financial_data"]).notNull(),
+  grantedBy: int("grantedBy").notNull().references(() => users.id),
+  grantedAt: timestamp("grantedAt").defaultNow().notNull(),
+  revokedBy: int("revokedBy").references(() => users.id),
+  revokedAt: timestamp("revokedAt"),
+}, table => [uniqueIndex("user_permission_grant_unique").on(table.userId, table.permission)]);
+
+export const accessInvitations = mysqlTable("accessInvitations", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  role: mysqlEnum("role", ["admin", "staff"]).default("staff").notNull(),
+  permissionsJson: text("permissionsJson").notNull(),
+  status: mysqlEnum("status", ["pending", "activated", "revoked"]).default("pending").notNull(),
+  invitedBy: int("invitedBy").notNull().references(() => users.id),
+  invitedAt: timestamp("invitedAt").defaultNow().notNull(),
+  activatedUserId: int("activatedUserId").references(() => users.id),
+  activatedAt: timestamp("activatedAt"),
+}, table => [uniqueIndex("access_invitation_email_unique").on(table.email)]);
+
+export const accessDelegationActions = mysqlTable("accessDelegationActions", {
+  id: int("id").autoincrement().primaryKey(),
+  action: mysqlEnum("action", ["invite", "role_change", "grant", "revoke", "activate_invitation"]).notNull(),
+  targetUserId: int("targetUserId").references(() => users.id),
+  targetEmail: varchar("targetEmail", { length: 320 }),
+  permission: varchar("permission", { length: 64 }),
+  previousValue: text("previousValue"),
+  nextValue: text("nextValue"),
+  actorId: int("actorId").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export const clients = mysqlTable("clients", {
@@ -180,6 +215,9 @@ export const reportApprovalActions = mysqlTable("reportApprovalActions", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+export type UserPermissionGrant = typeof userPermissionGrants.$inferSelect;
+export type AccessInvitation = typeof accessInvitations.$inferSelect;
+export type AccessDelegationAction = typeof accessDelegationActions.$inferSelect;
 export type Client = typeof clients.$inferSelect;
 export type LegalMatter = typeof legalMatters.$inferSelect;
 export type Revenue = typeof revenues.$inferSelect;

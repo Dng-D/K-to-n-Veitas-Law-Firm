@@ -3,12 +3,8 @@ import { z } from "zod";
 import * as db from "../db";
 import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
+import { DELEGABLE_PERMISSIONS, type DelegablePermission } from "../permissions";
 import { storagePut } from "../storage";
-
-const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ chủ sở hữu được phép thực hiện thao tác này." });
-  return next({ ctx });
-});
 
 const ownerProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.openId !== ENV.ownerOpenId) throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ chủ sở hữu dự án được phép quản lý vai trò tài khoản." });
@@ -16,9 +12,24 @@ const ownerProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 const accountantProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin" && ctx.user.role !== "user") {
+  if (ctx.user.role !== "owner" && ctx.user.role !== "admin" && ctx.user.role !== "staff") {
     throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản không có quyền truy cập nghiệp vụ tài chính." });
   }
+  return next({ ctx });
+});
+
+function delegatedPermissionProcedure(permission: DelegablePermission) {
+  return protectedProcedure.use(async ({ ctx, next }) => {
+    const profile = await db.getUserAccessProfile(ctx.user);
+    if (!profile.isOwner && !profile.permissions.includes(permission)) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản chưa được chủ sở hữu ủy quyền cho thao tác này." });
+    return next({ ctx });
+  });
+}
+
+const reportReviewProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const profile = await db.getUserAccessProfile(ctx.user);
+  const canReview = profile.isOwner || profile.permissions.includes("approve_report_level_1") || profile.permissions.includes("approve_report_level_2") || profile.permissions.includes("reject_report");
+  if (!canReview) throw new TRPCError({ code: "FORBIDDEN", message: "Tài khoản chưa được ủy quyền xem xét hoặc từ chối báo cáo." });
   return next({ ctx });
 });
 
@@ -43,31 +54,37 @@ function safeAttachmentName(fileName: string) {
 }
 
 export const financeRouter = router({
-  access: accountantProcedure.query(({ ctx }) => ({
-    role: ctx.user.role, canView: true, canCreate: true, canEdit: true,
-    canDelete: ctx.user.role === "admin", canManageAccess: ctx.user.openId === ENV.ownerOpenId,
-    canRequestApproval: true, canApprovePeriod: ctx.user.role === "admin", canLockPeriod: ctx.user.role === "admin", canApproveReport: ctx.user.role === "admin",
-  })),
+  access: accountantProcedure.query(async ({ ctx }) => {
+    const profile = await db.getUserAccessProfile(ctx.user);
+    const has = (permission: DelegablePermission) => profile.isOwner || profile.permissions.includes(permission);
+    return {
+      role: profile.role, isOwner: profile.isOwner, permissions: profile.permissions, canView: true, canCreate: true, canEdit: true,
+      canDelete: has("delete_financial_data"), canManageAccess: profile.isOwner, canRequestApproval: true,
+      canApprovePeriod: has("approve_month_close"), canLockPeriod: has("lock_month_close"), canReopenPeriod: has("reopen_month_close"),
+      canApproveReportLevelOne: has("approve_report_level_1"), canApproveReportLevelTwo: has("approve_report_level_2"), canRejectReport: has("reject_report"),
+    };
+  }),
   dashboard: accountantProcedure.input(z.object({ start: optionalDate, end: optionalDate }).optional()).query(({ input }) =>
     db.getDashboardData(input?.start ? new Date(input.start) : undefined, input?.end ? new Date(input.end) : undefined)),
   closing: router({
     overview: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getAccountingPeriodOverview(input.periodKey)),
     request: accountantProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.requestPeriodApproval(input.periodKey, ctx.user.id, input.note)),
-    approve: adminProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approvePeriod(input.periodKey, ctx.user.id, input.note)),
-    reject: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectPeriod(input.periodKey, ctx.user.id, input.reason)),
-    lock: adminProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.lockPeriod(input.periodKey, ctx.user.id, input.note)),
-    reopen: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.reopenPeriod(input.periodKey, ctx.user.id, input.reason)),
+    approve: delegatedPermissionProcedure("approve_month_close").input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approvePeriod(input.periodKey, ctx.user.id, input.note)),
+    reject: delegatedPermissionProcedure("approve_month_close").input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectPeriod(input.periodKey, ctx.user.id, input.reason)),
+    lock: delegatedPermissionProcedure("lock_month_close").input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.lockPeriod(input.periodKey, ctx.user.id, input.note)),
+    reopen: delegatedPermissionProcedure("reopen_month_close").input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.reopenPeriod(input.periodKey, ctx.user.id, input.reason)),
   }),
   reportApproval: router({
     overview: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getReportApprovalOverview(input.periodKey)),
     request: accountantProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.requestReportApproval(input.periodKey, ctx.user.id, input.note)),
-    approveLevelOne: adminProcedure.input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelOne(input.requestId, ctx.user.id, input.note)),
-    approveLevelTwo: adminProcedure.input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelTwo(input.requestId, ctx.user.id, input.note)),
-    reject: adminProcedure.input(z.object({ requestId: z.number().int().positive(), reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectReportApproval(input.requestId, ctx.user.id, input.reason)),
+    approveLevelOne: delegatedPermissionProcedure("approve_report_level_1").input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelOne(input.requestId, ctx.user.id, input.note)),
+    approveLevelTwo: delegatedPermissionProcedure("approve_report_level_2").input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelTwo(input.requestId, ctx.user.id, input.note)),
+    reject: reportReviewProcedure.input(z.object({ requestId: z.number().int().positive(), reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectReportApproval(input.requestId, ctx.user.id, input.reason)),
   }),
   accessControl: router({
-    listUsers: ownerProcedure.query(() => db.listSystemUsers()),
-    setUserRole: ownerProcedure.input(z.object({ userId: z.number().int().positive(), role: z.enum(["admin", "user"]) })).mutation(({ input }) => db.setSystemUserRole(input.userId, input.role)),
+    directory: ownerProcedure.query(() => db.listAccessDirectory()),
+    inviteByEmail: ownerProcedure.input(z.object({ email: z.string().email(), role: z.enum(["admin", "staff"]), permissions: z.array(z.enum(DELEGABLE_PERMISSIONS)).max(DELEGABLE_PERMISSIONS.length) })).mutation(({ ctx, input }) => db.inviteUserByEmail({ ...input, actorId: ctx.user.id })),
+    setUserAccess: ownerProcedure.input(z.object({ userId: z.number().int().positive(), role: z.enum(["admin", "staff"]), permissions: z.array(z.enum(DELEGABLE_PERMISSIONS)).max(DELEGABLE_PERMISSIONS.length) })).mutation(({ ctx, input }) => db.setUserAccessProfile({ ...input, actorId: ctx.user.id })),
   }),
   reconciliationReport: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getReconciliationReport(input.periodKey)),
   matters: router({
@@ -81,7 +98,7 @@ export const financeRouter = router({
       id: z.number().int(), title: z.string().min(2).optional(), serviceType: z.string().min(2).optional(), lawyerName: z.string().min(2).optional(),
       contractNumber: z.string().optional(), contractDate: optionalDate, contractValue: z.number().nonnegative().optional(), status: matterStatus.optional(), notes: z.string().optional(),
     })).mutation(({ input }) => db.updateMatter(input.id, { ...input, contractDate: input.contractDate === undefined ? undefined : input.contractDate ? new Date(input.contractDate) : null })),
-    delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("matter", input.id)),
+    delete: delegatedPermissionProcedure("delete_financial_data").input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("matter", input.id)),
   }),
   revenues: router({
     list: accountantProcedure.query(() => db.listRevenues()),
@@ -94,7 +111,7 @@ export const financeRouter = router({
       serviceDate: z.number().int().optional(), accountCode: revenueAccountCode.optional(), category: revenueCategory.optional(), amountBeforeTax: z.number().positive().optional(), vatRate: z.number().min(0).max(1).optional(),
       collectedAmount: z.number().min(0).optional(), dueDate: optionalDate, notes: z.string().optional(),
     })).mutation(({ input }) => db.updateRevenue(input.id, { ...input, invoiceDate: input.invoiceDate === undefined ? undefined : input.invoiceDate ? new Date(input.invoiceDate) : null, serviceDate: input.serviceDate ? new Date(input.serviceDate) : undefined, dueDate: input.dueDate === undefined ? undefined : input.dueDate ? new Date(input.dueDate) : null })),
-    delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("revenue", input.id)),
+    delete: delegatedPermissionProcedure("delete_financial_data").input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("revenue", input.id)),
   }),
   expenses: router({
     list: accountantProcedure.query(() => db.listExpenses()),
@@ -109,7 +126,7 @@ export const financeRouter = router({
       vatRate: z.number().min(0).max(1).optional(), paidAmount: z.number().min(0).optional(), dueDate: optionalDate,
       deductibility: z.enum(["deductible", "non_deductible", "pending"]).optional(), notes: z.string().optional(),
     })).mutation(({ input }) => db.updateExpense(input.id, { ...input, expenseDate: input.expenseDate ? new Date(input.expenseDate) : undefined, invoiceDate: input.invoiceDate === undefined ? undefined : input.invoiceDate ? new Date(input.invoiceDate) : null, dueDate: input.dueDate === undefined ? undefined : input.dueDate ? new Date(input.dueDate) : null })),
-    delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("expense", input.id)),
+    delete: delegatedPermissionProcedure("delete_financial_data").input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("expense", input.id)),
   }),
   cash: router({
     list: accountantProcedure.query(() => db.listCashTransactions()),
@@ -149,6 +166,6 @@ export const financeRouter = router({
         });
       }),
     }),
-    delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("cash", input.id)),
+    delete: delegatedPermissionProcedure("delete_financial_data").input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("cash", input.id)),
   }),
 });

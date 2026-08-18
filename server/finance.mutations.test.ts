@@ -26,7 +26,7 @@ function accountingContext(): TrpcContext {
       name: "Kế toán thử nghiệm",
       email: "accountant@veritas.test",
       loginMethod: "manus",
-      role: "user",
+      role: "staff",
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSignedIn: new Date(),

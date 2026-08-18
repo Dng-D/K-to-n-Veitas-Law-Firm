@@ -45,15 +45,15 @@ Tại **Phê duyệt & khóa sổ**, chọn đúng tháng cần kiểm soát. H�
 |---|---|---|---|
 | 1 | Nhân viên kế toán | Rà soát bảng điều kiện, số chứng từ, sao kê/sổ quỹ và danh mục chứng từ. | Kỳ vẫn ở trạng thái **Đang mở**. |
 | 2 | Nhân viên kế toán | Nhấn **Gửi phê duyệt** sau khi các điều kiện đạt. | Kỳ chuyển thành **Chờ phê duyệt** và hệ thống ghi nhật ký thao tác. |
-| 3 | Quản trị viên khác người gửi | Nhấn **Phê duyệt kỳ** hoặc **Từ chối** và nhập lý do nếu từ chối. | Kỳ chuyển thành **Đã phê duyệt** hoặc **Bị từ chối**. |
-| 4 | Quản trị viên | Nhấn **Khóa sổ tháng** sau khi đã phê duyệt. | Kỳ chuyển thành **Đã khóa sổ**; mọi tạo, sửa, xóa và đính kèm chứng từ thuộc tháng này bị chặn ở hệ thống. |
-| 5 | Quản trị viên | Chỉ dùng **Mở lại kỳ** khi cần điều chỉnh có căn cứ, đồng thời nhập lý do. | Kỳ trở lại **Đang mở** và lý do được lưu trong dấu vết kiểm soát. |
+| 3 | Tài khoản có quyền **Phê duyệt kỳ** khác người gửi | Nhấn **Phê duyệt kỳ** hoặc **Từ chối** và nhập lý do nếu từ chối. | Kỳ chuyển thành **Đã phê duyệt** hoặc **Bị từ chối**. |
+| 4 | Tài khoản có quyền **Khóa sổ tháng** | Nhấn **Khóa sổ tháng** sau khi đã phê duyệt. | Kỳ chuyển thành **Đã khóa sổ**; mọi tạo, sửa, xóa và đính kèm chứng từ thuộc tháng này bị chặn ở hệ thống. |
+| 5 | Tài khoản có quyền **Mở lại kỳ** | Chỉ dùng **Mở lại kỳ** khi cần điều chỉnh có căn cứ, đồng thời nhập lý do. | Kỳ trở lại **Đang mở** và lý do được lưu trong dấu vết kiểm soát. |
 
 Người gửi yêu cầu không thể tự phê duyệt kỳ của mình. Nếu doanh nghiệp có một người vận hành, cần có một tài khoản người lập riêng để duy trì nguyên tắc phân tách nhiệm vụ. Không khóa sổ nếu chưa kiểm tra chứng từ gốc; trạng thái “Đạt” chỉ phản ánh các điều kiện dữ liệu mà hệ thống kiểm tra tự động.
 
 ## Phê duyệt báo cáo hai cấp và hồ sơ xác nhận nội bộ
 
-Sau khi kỳ đã **khóa sổ**, mở **Phê duyệt báo cáo**. Người lập nhấn **Gửi phê duyệt cấp 1** để hệ thống tạo ảnh chụp dữ liệu đối chiếu và mã hàm băm SHA-256. Một quản trị viên khác người lập thực hiện **Phê duyệt cấp 1**; một quản trị viên thứ ba, khác cả người lập và cấp 1, thực hiện **Xác nhận cấp 2**. Khi hoàn tất, trạng thái là **Đã xác nhận nội bộ** và có thể xuất biên bản PDF/Excel.
+Sau khi kỳ đã **khóa sổ**, mở **Phê duyệt báo cáo**. Người lập nhấn **Gửi phê duyệt cấp 1** để hệ thống tạo ảnh chụp dữ liệu đối chiếu và mã hàm băm SHA-256. Một tài khoản khác người lập, có quyền **Phê duyệt báo cáo cấp 1**, thực hiện bước kiểm tra đầu tiên; một tài khoản thứ ba, khác cả người lập và cấp 1, có quyền **Phê duyệt báo cáo cấp 2**, thực hiện xác nhận hoàn tất. Khi hoàn tất, trạng thái là **Đã xác nhận nội bộ** và có thể xuất biên bản PDF/Excel.
 
 | Thao tác | Quy tắc kiểm soát |
 |---|---|
@@ -77,18 +77,39 @@ Tại **Phê duyệt & khóa sổ**, nút **Xuất Excel** và **Xuất PDF** t�
 
 Để đính kèm hóa đơn hoặc chứng từ cho một dòng thu–chi đã tạo, nhấn biểu tượng kẹp giấy tại cột **Tệp**. Hệ thống chấp nhận tệp **PDF, JPG, PNG và WEBP**, với dung lượng không quá **8 MB** mỗi tệp. Tệp được lưu theo từng giao dịch; có thể mở lại từ cửa sổ chứng từ đính kèm. Không tải lên tài liệu không liên quan đến giao dịch hoặc có dữ liệu nhạy cảm vượt quá phạm vi cần thiết cho chứng từ kế toán.
 
-## Phân quyền
+## Phân quyền theo email và ủy quyền chi tiết
 
-| Thao tác | Chủ sở hữu (admin) | Nhân viên kế toán |
-|---|---:|---:|
-| Xem dashboard và báo cáo | Có | Có |
-| Tạo/chỉnh sửa hồ sơ, doanh thu, chi phí, thu–chi | Có | Có |
-| Gửi yêu cầu phê duyệt kỳ | Có | Có |
-| Phê duyệt, từ chối, khóa hoặc mở lại kỳ | Có | Không |
-| Xóa dữ liệu nghiệp vụ | Có | Không |
-| Quản trị quyền tài khoản | Có | Không |
+Hệ thống có ba lớp vai trò: **chủ sở hữu**, **quản trị viên** và **nhân sự**. Chủ sở hữu được nhận diện bằng tài khoản dự án và có toàn quyền; vai trò này không thể được đổi từ giao diện. Quản trị viên không có toàn quyền mặc định mà chỉ được thực hiện đúng từng thẩm quyền chủ sở hữu cấp. Nhân sự có thể xem, tạo và chỉnh sửa nghiệp vụ thông thường nhưng không tự phê duyệt, khóa/mở kỳ, từ chối báo cáo hay xóa dữ liệu.
 
-Vai trò `admin` được gán cho chủ sở hữu dự án khi đăng nhập lần đầu. Các tài khoản khác mặc định có vai trò `user`, được hiển thị trong giao diện là **Nhân viên kế toán**.
+| Thao tác | Chủ sở hữu | Quản trị viên được ủy quyền | Nhân sự |
+|---|---:|---:|---:|
+| Xem dashboard, báo cáo và danh mục nghiệp vụ | Có | Có | Có |
+| Tạo/chỉnh sửa hồ sơ, doanh thu, chi phí, thu–chi | Có | Có | Có |
+| Gửi yêu cầu phê duyệt kỳ hoặc báo cáo | Có | Có | Có |
+| Phê duyệt/từ chối kỳ, khóa hoặc mở lại kỳ | Có | Chỉ khi được cấp đúng quyền | Không |
+| Phê duyệt báo cáo cấp 1 hoặc cấp 2; từ chối báo cáo | Có | Chỉ khi được cấp đúng quyền | Không |
+| Xóa dữ liệu nghiệp vụ | Có | Chỉ khi được cấp quyền xóa | Không |
+| Mời email, đổi vai trò và thay đổi quyền của người khác | Có | Không | Không |
+
+### Mời tài khoản và kích hoạt quyền
+
+1. Chủ sở hữu mở mục **Phân quyền truy cập** và nhập email công việc của người được mời.
+2. Chọn vai trò **Quản trị viên** hoặc **Nhân sự**. Với quản trị viên, chỉ chọn những quyền thực sự cần thiết trong danh mục quyền có thể ủy quyền.
+3. Xác nhận mời. Hệ thống lưu lời mời, quyền dự kiến và nhật ký thao tác của chủ sở hữu; lời mời **không** làm phát sinh quyền ngay lập tức.
+4. Người được mời đăng nhập bằng đúng email đã được mời. Hệ thống sẽ gắn vai trò và quyền đã cấp vào tài khoản tương ứng.
+5. Chủ sở hữu kiểm tra lại khu vực **Người phê duyệt được ủy quyền** và nhật ký ủy quyền, đặc biệt trước khi sử dụng luồng báo cáo hai cấp.
+
+| Quyền có thể cấp cho quản trị viên | Phạm vi sử dụng |
+|---|---|
+| Phê duyệt kỳ | Phê duyệt hoặc từ chối yêu cầu khóa sổ tháng của người khác. |
+| Khóa sổ tháng | Khóa một kỳ đã được phê duyệt. |
+| Mở lại kỳ | Mở kỳ đã khóa khi có lý do được ghi nhận. |
+| Phê duyệt báo cáo cấp 1 | Kiểm tra báo cáo đã khóa ở bước xác nhận thứ nhất. |
+| Phê duyệt báo cáo cấp 2 | Xác nhận hoàn tất ở bước thứ hai, độc lập với người lập và cấp 1. |
+| Từ chối báo cáo | Trả lại yêu cầu báo cáo kèm lý do. |
+| Xóa dữ liệu nghiệp vụ | Xóa hồ sơ, doanh thu, chi phí hoặc giao dịch thu–chi; chỉ cấp khi thật cần thiết. |
+
+> Không dùng một tài khoản duy nhất cho người lập, người phê duyệt cấp 1 và cấp 2. Chủ sở hữu cần rà soát danh mục người phê duyệt trước mỗi kỳ để duy trì phân tách nhiệm vụ. Việc phân quyền và các thay đổi quyền được lưu trong nhật ký kiểm soát, nhưng không thay thế quy chế ủy quyền, phê duyệt hoặc lưu trữ hồ sơ nội bộ của Công ty.
 
 ## Nguyên tắc kiểm soát
 
