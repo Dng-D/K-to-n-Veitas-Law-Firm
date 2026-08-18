@@ -67,5 +67,6 @@
 - [x] Bổ sung tìm kiếm, bộ lọc vai trò và trạng thái quyền vào trang quản lý phân quyền.
 - [x] Thiết kế và triển khai thời hạn cho từng quyền được cấp, bao gồm tự động vô hiệu hóa khi hết hạn và nhật ký thu hồi.
 - [ ] Nâng cấp API và giao diện để thiết lập thời hạn riêng cho từng thẩm quyền được cấp, đồng thời kiểm thử tình huống một quyền hết hạn độc lập.
-- [ ] Tạo, kích hoạt và ghi nhận tác vụ nền production gọi điểm thu hồi quyền quá hạn; xác minh tác vụ có thể vận hành tự động.
+- [x] Tạo, kích hoạt và ghi nhận tác vụ nền production gọi điểm thu hồi quyền quá hạn; xác minh tác vụ có thể vận hành tự động.
+- [ ] Triển khai endpoint thu hồi quyền lên production, kiểm tra nhật ký hoặc chạy thử tác vụ `TBbdeg8XKQMhAQ2AiUv88M`, và ghi nhận kết quả vận hành.
 - [ ] Bổ sung kiểm thử, QA responsive, hướng dẫn vận hành và đồng bộ phiên bản cho các tính năng quản trị quyền mới.

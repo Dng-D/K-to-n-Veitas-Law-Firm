@@ -107,6 +107,8 @@ Chủ sở hữu có thể tìm theo tên, email hoặc vai trò và lọc theo 
 
 > Khi đến thời hạn, các quyền nhạy cảm không còn được chấp nhận ở máy chủ ngay cả khi giao diện chưa được làm mới. Tác vụ nền sẽ thu hồi quyền đã hết hạn, lưu nhật ký hành động `expire` và cập nhật danh mục người phê duyệt. Chủ sở hữu vẫn có thể cấp lại một quyền mới nếu có căn cứ ủy quyền.
 
+Tác vụ thu hồi tự động của dự án có mã quản trị `TBbdeg8XKQMhAQ2AiUv88M`, chạy mỗi ngày lúc **00:05 UTC** (07:05 giờ Việt Nam) tại điểm xử lý `/api/scheduled/revoke-expired-access`. Chủ sở hữu có thể theo dõi, tạm dừng hoặc kích hoạt lại tác vụ trong khu vực quản trị tác vụ của dự án.
+
 | Quyền có thể cấp cho quản trị viên | Phạm vi sử dụng |
 |---|---|
 | Phê duyệt kỳ | Phê duyệt hoặc từ chối yêu cầu khóa sổ tháng của người khác. |
