@@ -25,7 +25,7 @@
 - [x] Soạn nội dung trang WordPress chỉ gồm mô tả hệ thống và báo cáo tổng hợp ẩn danh, không có khách hàng, vụ việc, chứng từ hoặc giao dịch chi tiết.
 - [x] Xin xác nhận cuối cùng ngay trước thao tác tạo hoặc cập nhật nội dung trên WordPress.com.
 - [x] Tạo một trang WordPress ở trạng thái bản nháp bằng nội dung đã ẩn danh, kiểm tra cảnh báo nội dung và lưu liên kết xem trước cho người dùng duyệt.
-- [ ] Đồng bộ trạng thái xác thực WordPress và bản nháp đã tạo lên kho GitHub trước khi bàn giao.
+- [x] Đồng bộ trạng thái xác thực WordPress và bản nháp đã tạo lên kho GitHub trước khi bàn giao.
 - [x] Bổ sung một báo cáo tổng hợp ẩn danh có số liệu quản trị ở mức tổng hợp hoặc trạng thái chưa có dữ liệu vào bản nháp WordPress.
 - [x] Lấy, kiểm tra và chia sẻ liên kết xem trước `preview=true` của bản nháp WordPress; lưu bằng chứng phản hồi không có cảnh báo nội dung.
 - [x] Cập nhật trang WordPress nháp ID 6 với bảng tổng hợp ẩn danh đã được người dùng chấp thuận, duy trì trạng thái draft.
