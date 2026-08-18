@@ -1,14 +1,22 @@
 # Project TODO
 
-- [ ] Rà soát mã nguồn, cấu trúc dữ liệu và các thành phần giao diện hiện có của dự án đính kèm.
-- [ ] Thiết kế mô hình dữ liệu có kiểm soát truy cập cho danh mục khách hàng, vụ việc, khoản thu, khoản chi và chứng từ kế toán.
-- [ ] Xây dựng danh mục tài khoản, nhóm thu–chi và các trường bắt buộc để bảo đảm dữ liệu có thể đối chiếu.
-- [ ] Tạo giao diện bảng điều khiển nội bộ thể hiện dòng tiền, số dư, khoản phải thu và cảnh báo dữ liệu chưa hoàn chỉnh.
-- [ ] Tạo biểu mẫu ghi nhận, chỉnh sửa và tra cứu các giao dịch thu–chi có bộ lọc theo kỳ, khách hàng, vụ việc và loại giao dịch.
-- [ ] Tạo các bảng tổng hợp và báo cáo quyết toán theo quý, 6 tháng và năm dựa trên dữ liệu giao dịch đã ghi nhận.
+- [x] Rà soát mã nguồn, cấu trúc dữ liệu và các thành phần giao diện hiện có của dự án đính kèm.
+- [x] Thiết kế mô hình dữ liệu có kiểm soát truy cập cho danh mục khách hàng, vụ việc, khoản thu, khoản chi và chứng từ kế toán.
+- [x] Xây dựng danh mục tài khoản, nhóm thu–chi và các trường bắt buộc để bảo đảm dữ liệu có thể đối chiếu.
+- [x] Tạo giao diện bảng điều khiển nội bộ thể hiện dòng tiền, số dư, khoản phải thu và cảnh báo dữ liệu chưa hoàn chỉnh.
+- [x] Tạo biểu mẫu ghi nhận, chỉnh sửa và tra cứu các giao dịch thu–chi có bộ lọc theo kỳ, khách hàng, vụ việc và loại giao dịch.
+- [x] Tạo các bảng tổng hợp và báo cáo quyết toán theo quý, 6 tháng và năm dựa trên dữ liệu giao dịch đã ghi nhận.
 - [ ] Bổ sung kiểm thử Vitest cho các phép tính tổng hợp, giới hạn dữ liệu và các thủ tục cập nhật giao dịch.
-- [ ] Rà soát căn cứ áp dụng chế độ kế toán và nêu rõ giới hạn pháp lý của các báo cáo nội bộ.
+- [x] Rà soát căn cứ áp dụng chế độ kế toán và nêu rõ giới hạn pháp lý của các báo cáo nội bộ.
 - [ ] Xác minh phương thức kết nối WordPress.com, chỉ thực hiện truyền dữ liệu sau khi có quyền truy cập và xác nhận thao tác gửi.
 - [x] Kiểm tra kho GitHub hiện có hoặc tạo kho riêng tư, sau đó đẩy mã nguồn và tài liệu triển khai.
-- [ ] Kiểm thử hiển thị trên máy tính và thiết bị di động, cập nhật trạng thái hoàn thành trong danh sách này.
+- [x] Kiểm thử hiển thị trên máy tính và thiết bị di động, cập nhật trạng thái hoàn thành trong danh sách này.
 - [x] Xác minh quyền ghi vào kho GitHub Dng-D/K-to-n-Veitas-Law-Firm, kiểm tra tệp nhạy cảm và đồng bộ phiên bản dự án hiện tại bằng một commit có mô tả rõ ràng.
+- [x] Chuẩn hóa mã tài khoản và nhóm nghiệp vụ cho sổ doanh thu, sổ chi phí và nhật ký thu–chi; không để các trường phân loại tự do làm cản trở đối chiếu.
+- [x] Bổ sung chỉ tiêu đối chiếu liên sổ để nhận diện chênh lệch giữa doanh thu/chi phí đã ghi nhận và các giao dịch thực thu/thực chi liên quan.
+- [x] Mở rộng kiểm thử cho danh mục bắt buộc và trường hợp sai danh mục của doanh thu, chi phí và giao dịch thu–chi.
+- [x] Bổ sung KPI số dư và cảnh báo giao dịch chưa đối chiếu, chưa phân loại hoặc có chênh lệch liên sổ trực tiếp trên dashboard.
+- [x] Thêm chức năng sửa giao dịch thu–chi ở máy chủ và giao diện; bổ sung bộ lọc theo kỳ, khách hàng, vụ việc và loại giao dịch.
+- [x] Hoàn tất kiểm thử responsive có ghi nhận kết quả cho toàn bộ màn hình chính sau khi các chức năng còn thiếu được bổ sung.
+- [x] Lập biên bản QA responsive có thể kiểm tra trong kho mã, ghi rõ route, breakpoint, trạng thái pass/fail, kết quả và lỗi đã xử lý.
+- [ ] Đồng bộ phiên bản hoàn thiện, các bản di trú cơ sở dữ liệu, hướng dẫn vận hành và biên bản QA lên kho GitHub Dng-D/K-to-n-Veitas-Law-Firm.

@@ -19,7 +19,17 @@ describe("calculateDashboardMetrics", () => {
       ],
     });
 
-    expect(data.kpis).toEqual({ totalRevenue: 150000000, actualReceipts: 110000000, actualPayments: 20000000, profit: 120000000, receivable: 40000000, payable: 13000000 });
+    expect(data.kpis).toEqual({ totalRevenue: 150000000, actualReceipts: 110000000, actualPayments: 20000000, cashBalance: 90000000, profit: 120000000, receivable: 40000000, payable: 13000000 });
+    expect(data.reconciliation).toEqual({
+      declaredReceipts: 125000000,
+      cashReceipts: 110000000,
+      receiptDifference: -15000000,
+      declaredPayments: 20000000,
+      cashPayments: 20000000,
+      paymentDifference: 0,
+      otherReferenceCount: 0,
+      unreconciledCashCount: 2,
+    });
     expect(data.counts).toEqual({ matters: 2, activeMatters: 1, overdueRevenue: 1 });
     expect(data.monthly).toEqual([{ month: "2026-01", revenue: 100000000, expense: 30000000, cashFlow: 90000000 }, { month: "2026-02", revenue: 50000000, expense: 0, cashFlow: 0 }]);
   });

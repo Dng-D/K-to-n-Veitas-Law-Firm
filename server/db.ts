@@ -135,7 +135,8 @@ export async function listRevenues() {
   if (!db) return [];
   return db.select({
     id: revenues.id, matterId: revenues.matterId, invoiceNumber: revenues.invoiceNumber, invoiceDate: revenues.invoiceDate,
-    serviceDate: revenues.serviceDate, amountBeforeTax: revenues.amountBeforeTax, vatRate: revenues.vatRate,
+    serviceDate: revenues.serviceDate, accountCode: revenues.accountCode, category: revenues.category,
+    amountBeforeTax: revenues.amountBeforeTax, vatRate: revenues.vatRate,
     vatOutput: revenues.vatOutput, totalAmount: revenues.totalAmount, collectedAmount: revenues.collectedAmount,
     dueDate: revenues.dueDate, status: revenues.status, notes: revenues.notes, matterCode: legalMatters.code,
     matterTitle: legalMatters.title, clientName: clients.name, updatedAt: revenues.updatedAt,
@@ -154,7 +155,7 @@ function revenueStatus(total: number, collected: number, dueDate?: Date | null) 
 
 export async function createRevenue(input: {
   matterId?: number | null; invoiceNumber?: string; invoiceDate?: Date | null; serviceDate: Date;
-  amountBeforeTax: number; vatRate: number; collectedAmount: number; dueDate?: Date | null; notes?: string; createdBy: number;
+  accountCode: string; category: string; amountBeforeTax: number; vatRate: number; collectedAmount: number; dueDate?: Date | null; notes?: string; createdBy: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
@@ -162,7 +163,8 @@ export async function createRevenue(input: {
   const totalAmount = input.amountBeforeTax + vatOutput;
   await db.insert(revenues).values({
     matterId: input.matterId ?? null, invoiceNumber: input.invoiceNumber || null, invoiceDate: input.invoiceDate ?? null,
-    serviceDate: input.serviceDate, amountBeforeTax: input.amountBeforeTax.toFixed(2), vatRate: input.vatRate.toFixed(4),
+    serviceDate: input.serviceDate, accountCode: input.accountCode, category: input.category,
+    amountBeforeTax: input.amountBeforeTax.toFixed(2), vatRate: input.vatRate.toFixed(4),
     vatOutput: vatOutput.toFixed(2), totalAmount: totalAmount.toFixed(2), collectedAmount: input.collectedAmount.toFixed(2),
     dueDate: input.dueDate ?? null, status: revenueStatus(totalAmount, input.collectedAmount, input.dueDate),
     notes: input.notes || null, createdBy: input.createdBy,
@@ -172,7 +174,7 @@ export async function createRevenue(input: {
 
 export async function updateRevenue(id: number, input: Partial<{
   matterId: number | null; invoiceNumber: string; invoiceDate: Date | null; serviceDate: Date; amountBeforeTax: number;
-  vatRate: number; collectedAmount: number; dueDate: Date | null; notes: string;
+  accountCode: string; category: string; vatRate: number; collectedAmount: number; dueDate: Date | null; notes: string;
 }>) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
@@ -195,6 +197,7 @@ export async function listExpenses() {
   if (!db) return [];
   return db.select({
     id: expenses.id, matterId: expenses.matterId, supplierName: expenses.supplierName, category: expenses.category,
+    accountCode: expenses.accountCode, categoryCode: expenses.categoryCode,
     expenseDate: expenses.expenseDate, invoiceNumber: expenses.invoiceNumber, invoiceDate: expenses.invoiceDate,
     amountBeforeTax: expenses.amountBeforeTax, vatRate: expenses.vatRate, vatInput: expenses.vatInput,
     totalAmount: expenses.totalAmount, paidAmount: expenses.paidAmount, dueDate: expenses.dueDate,
@@ -211,7 +214,7 @@ function expenseStatus(total: number, paid: number) {
 
 export async function createExpense(input: {
   matterId?: number | null; supplierName: string; category: string; expenseDate: Date; invoiceNumber?: string;
-  invoiceDate?: Date | null; amountBeforeTax: number; vatRate: number; paidAmount: number; dueDate?: Date | null;
+  accountCode: string; categoryCode: string; invoiceDate?: Date | null; amountBeforeTax: number; vatRate: number; paidAmount: number; dueDate?: Date | null;
   deductibility: "deductible" | "non_deductible" | "pending"; notes?: string; createdBy: number;
 }) {
   const db = await getDb();
@@ -219,7 +222,8 @@ export async function createExpense(input: {
   const vatInput = input.amountBeforeTax * input.vatRate;
   const totalAmount = input.amountBeforeTax + vatInput;
   await db.insert(expenses).values({
-    matterId: input.matterId ?? null, supplierName: input.supplierName, category: input.category, expenseDate: input.expenseDate,
+    matterId: input.matterId ?? null, supplierName: input.supplierName, category: input.category, accountCode: input.accountCode,
+    categoryCode: input.categoryCode, expenseDate: input.expenseDate,
     invoiceNumber: input.invoiceNumber || null, invoiceDate: input.invoiceDate ?? null, amountBeforeTax: input.amountBeforeTax.toFixed(2),
     vatRate: input.vatRate.toFixed(4), vatInput: vatInput.toFixed(2), totalAmount: totalAmount.toFixed(2),
     paidAmount: input.paidAmount.toFixed(2), dueDate: input.dueDate ?? null, paymentStatus: expenseStatus(totalAmount, input.paidAmount),
@@ -230,7 +234,7 @@ export async function createExpense(input: {
 
 export async function updateExpense(id: number, input: Partial<{
   matterId: number | null; supplierName: string; category: string; expenseDate: Date; invoiceNumber: string; invoiceDate: Date | null;
-  amountBeforeTax: number; vatRate: number; paidAmount: number; dueDate: Date | null;
+  accountCode: string; categoryCode: string; amountBeforeTax: number; vatRate: number; paidAmount: number; dueDate: Date | null;
   deductibility: "deductible" | "non_deductible" | "pending"; notes: string;
 }>) {
   const db = await getDb();
@@ -253,7 +257,8 @@ export async function listCashTransactions() {
   if (!db) return [];
   return db.select({
     id: cashTransactions.id, transactionDate: cashTransactions.transactionDate, type: cashTransactions.type,
-    amount: cashTransactions.amount, paymentMethod: cashTransactions.paymentMethod, referenceType: cashTransactions.referenceType,
+    amount: cashTransactions.amount, paymentMethod: cashTransactions.paymentMethod, accountCode: cashTransactions.accountCode,
+    category: cashTransactions.category, referenceType: cashTransactions.referenceType,
     referenceId: cashTransactions.referenceId, matterId: cashTransactions.matterId, documentNumber: cashTransactions.documentNumber,
     description: cashTransactions.description, reconciled: cashTransactions.reconciled, matterCode: legalMatters.code,
     matterTitle: legalMatters.title, updatedAt: cashTransactions.updatedAt,
@@ -262,7 +267,8 @@ export async function listCashTransactions() {
 
 export async function createCashTransaction(input: {
   transactionDate: Date; type: "receipt" | "payment"; amount: number;
-  paymentMethod: "bank" | "cash" | "transfer" | "other"; referenceType: "revenue" | "expense" | "other";
+  paymentMethod: "bank" | "cash" | "transfer" | "other"; accountCode: string; category: string;
+  referenceType: "revenue" | "expense" | "other";
   referenceId?: number | null; matterId?: number | null; documentNumber?: string; description: string; reconciled: boolean; createdBy: number;
 }) {
   const db = await getDb();
@@ -271,6 +277,23 @@ export async function createCashTransaction(input: {
     ...input, amount: input.amount.toFixed(2), referenceId: input.referenceId ?? null, matterId: input.matterId ?? null,
     documentNumber: input.documentNumber || null,
   });
+  return { success: true };
+}
+
+export async function updateCashTransaction(id: number, input: Partial<{
+  transactionDate: Date; type: "receipt" | "payment"; amount: number;
+  paymentMethod: "bank" | "cash" | "transfer" | "other"; accountCode: string; category: string;
+  referenceType: "revenue" | "expense" | "other"; referenceId: number | null; matterId: number | null;
+  documentNumber: string; description: string; reconciled: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const { amount, documentNumber, ...rest } = input;
+  await db.update(cashTransactions).set({
+    ...rest,
+    ...(amount !== undefined ? { amount: amount.toFixed(2) } : {}),
+    ...(documentNumber !== undefined ? { documentNumber: documentNumber || null } : {}),
+  }).where(eq(cashTransactions.id, id));
   return { success: true };
 }
 
@@ -313,7 +336,7 @@ type DashboardSource = {
   matterRows: Array<{ status: string }>;
   revenueRows: Array<{ status: string; serviceDate: Date; updatedAt: Date; amountBeforeTax: string | number; totalAmount: string | number; collectedAmount: string | number }>;
   expenseRows: Array<{ expenseDate: Date; updatedAt: Date; amountBeforeTax: string | number; totalAmount: string | number; paidAmount: string | number }>;
-  cashRows: Array<{ transactionDate: Date; updatedAt: Date; type: "receipt" | "payment"; amount: string | number }>;
+  cashRows: Array<{ transactionDate: Date; updatedAt: Date; type: "receipt" | "payment"; amount: string | number; referenceType?: "revenue" | "expense" | "other"; reconciled?: boolean }>;
 };
 
 export function calculateDashboardMetrics(source: DashboardSource, start?: Date, end?: Date) {
@@ -332,6 +355,8 @@ export function calculateDashboardMetrics(source: DashboardSource, start?: Date,
   const actualReceipts = sum(selectedCash.filter(row => row.type === "receipt"), row => Number(row.amount));
   const actualPayments = sum(selectedCash.filter(row => row.type === "payment"), row => Number(row.amount));
   const totalExpenses = sum(selectedExpenses, row => Number(row.amountBeforeTax));
+  const declaredReceipts = sum(selectedRevenues, row => Number(row.collectedAmount));
+  const declaredPayments = sum(selectedExpenses, row => Number(row.paidAmount));
   const monthly = new Map<string, { month: string; revenue: number; expense: number; cashFlow: number }>();
   const registerMonth = (date: Date, key: "revenue" | "expense" | "cashFlow", amount: number) => {
     const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -343,7 +368,17 @@ export function calculateDashboardMetrics(source: DashboardSource, start?: Date,
   selectedExpenses.forEach(row => registerMonth(row.expenseDate, "expense", Number(row.amountBeforeTax)));
   selectedCash.forEach(row => registerMonth(row.transactionDate, "cashFlow", row.type === "receipt" ? Number(row.amount) : -Number(row.amount)));
   return {
-    kpis: { totalRevenue, actualReceipts, actualPayments, profit: totalRevenue - totalExpenses, receivable, payable },
+    kpis: { totalRevenue, actualReceipts, actualPayments, cashBalance: actualReceipts - actualPayments, profit: totalRevenue - totalExpenses, receivable, payable },
+    reconciliation: {
+      declaredReceipts,
+      cashReceipts: actualReceipts,
+      receiptDifference: actualReceipts - declaredReceipts,
+      declaredPayments,
+      cashPayments: actualPayments,
+      paymentDifference: actualPayments - declaredPayments,
+      otherReferenceCount: selectedCash.filter(row => row.referenceType === "other").length,
+      unreconciledCashCount: selectedCash.filter(row => !row.reconciled).length,
+    },
     monthly: Array.from(monthly.values()).sort((a, b) => a.month.localeCompare(b.month)),
     counts: { matters: matterRows.length, activeMatters: matterRows.filter(row => row.status === "active").length, overdueRevenue: revenueRows.filter(row => row.status === "overdue").length },
   };

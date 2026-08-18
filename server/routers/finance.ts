@@ -19,6 +19,15 @@ const accountantProcedure = protectedProcedure.use(({ ctx, next }) => {
 const optionalDate = z.number().int().nullable().optional();
 const matterStatus = z.enum(["draft", "active", "on_hold", "completed", "closed"]);
 const paymentMethod = z.enum(["bank", "cash", "transfer", "other"]);
+const cashAccountCode = z.enum(["1111", "1121", "131", "331", "3331", "5113", "642"]);
+const revenueAccountCode = z.enum(["5113", "515", "711"]);
+const expenseAccountCode = z.enum(["635", "642", "811"]);
+const revenueCategory = z.enum(["legal_service", "retainer", "litigation", "consultancy", "reimbursement", "other_income"]);
+const expenseCategory = z.enum(["payroll", "office", "technology", "travel", "tax_fee", "professional_service", "other_expense", "other"]);
+const cashCategory = z.enum([
+  "legal_service", "reimbursement", "other_income", "payroll", "office", "technology",
+  "travel", "tax_fee", "professional_service", "other_expense", "other",
+]);
 const attachmentTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 const maxAttachmentBytes = 8 * 1024 * 1024;
 
@@ -50,11 +59,11 @@ export const financeRouter = router({
     list: accountantProcedure.query(() => db.listRevenues()),
     create: accountantProcedure.input(z.object({
       matterId: z.number().int().nullable().optional(), invoiceNumber: z.string().optional(), invoiceDate: optionalDate, serviceDate: z.number().int(),
-      amountBeforeTax: z.number().positive(), vatRate: z.number().min(0).max(1), collectedAmount: z.number().min(0), dueDate: optionalDate, notes: z.string().optional(),
+      accountCode: revenueAccountCode, category: revenueCategory, amountBeforeTax: z.number().positive(), vatRate: z.number().min(0).max(1), collectedAmount: z.number().min(0), dueDate: optionalDate, notes: z.string().optional(),
     })).mutation(({ ctx, input }) => db.createRevenue({ ...input, invoiceDate: input.invoiceDate ? new Date(input.invoiceDate) : null, serviceDate: new Date(input.serviceDate), dueDate: input.dueDate ? new Date(input.dueDate) : null, createdBy: ctx.user.id })),
     update: accountantProcedure.input(z.object({
       id: z.number().int(), matterId: z.number().int().nullable().optional(), invoiceNumber: z.string().optional(), invoiceDate: optionalDate,
-      serviceDate: z.number().int().optional(), amountBeforeTax: z.number().positive().optional(), vatRate: z.number().min(0).max(1).optional(),
+      serviceDate: z.number().int().optional(), accountCode: revenueAccountCode.optional(), category: revenueCategory.optional(), amountBeforeTax: z.number().positive().optional(), vatRate: z.number().min(0).max(1).optional(),
       collectedAmount: z.number().min(0).optional(), dueDate: optionalDate, notes: z.string().optional(),
     })).mutation(({ input }) => db.updateRevenue(input.id, { ...input, invoiceDate: input.invoiceDate === undefined ? undefined : input.invoiceDate ? new Date(input.invoiceDate) : null, serviceDate: input.serviceDate ? new Date(input.serviceDate) : undefined, dueDate: input.dueDate === undefined ? undefined : input.dueDate ? new Date(input.dueDate) : null })),
     delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("revenue", input.id)),
@@ -63,12 +72,12 @@ export const financeRouter = router({
     list: accountantProcedure.query(() => db.listExpenses()),
     create: accountantProcedure.input(z.object({
       matterId: z.number().int().nullable().optional(), supplierName: z.string().min(2), category: z.string().min(2), expenseDate: z.number().int(),
-      invoiceNumber: z.string().optional(), invoiceDate: optionalDate, amountBeforeTax: z.number().positive(), vatRate: z.number().min(0).max(1),
+      accountCode: expenseAccountCode, categoryCode: expenseCategory, invoiceNumber: z.string().optional(), invoiceDate: optionalDate, amountBeforeTax: z.number().positive(), vatRate: z.number().min(0).max(1),
       paidAmount: z.number().min(0), dueDate: optionalDate, deductibility: z.enum(["deductible", "non_deductible", "pending"]), notes: z.string().optional(),
     })).mutation(({ ctx, input }) => db.createExpense({ ...input, expenseDate: new Date(input.expenseDate), invoiceDate: input.invoiceDate ? new Date(input.invoiceDate) : null, dueDate: input.dueDate ? new Date(input.dueDate) : null, createdBy: ctx.user.id })),
     update: accountantProcedure.input(z.object({
       id: z.number().int(), matterId: z.number().int().nullable().optional(), supplierName: z.string().min(2).optional(), category: z.string().min(2).optional(),
-      expenseDate: z.number().int().optional(), invoiceNumber: z.string().optional(), invoiceDate: optionalDate, amountBeforeTax: z.number().positive().optional(),
+      expenseDate: z.number().int().optional(), accountCode: expenseAccountCode.optional(), categoryCode: expenseCategory.optional(), invoiceNumber: z.string().optional(), invoiceDate: optionalDate, amountBeforeTax: z.number().positive().optional(),
       vatRate: z.number().min(0).max(1).optional(), paidAmount: z.number().min(0).optional(), dueDate: optionalDate,
       deductibility: z.enum(["deductible", "non_deductible", "pending"]).optional(), notes: z.string().optional(),
     })).mutation(({ input }) => db.updateExpense(input.id, { ...input, expenseDate: input.expenseDate ? new Date(input.expenseDate) : undefined, invoiceDate: input.invoiceDate === undefined ? undefined : input.invoiceDate ? new Date(input.invoiceDate) : null, dueDate: input.dueDate === undefined ? undefined : input.dueDate ? new Date(input.dueDate) : null })),
@@ -78,9 +87,15 @@ export const financeRouter = router({
     list: accountantProcedure.query(() => db.listCashTransactions()),
     create: accountantProcedure.input(z.object({
       transactionDate: z.number().int(), type: z.enum(["receipt", "payment"]), amount: z.number().positive(), paymentMethod,
+      accountCode: cashAccountCode, category: cashCategory,
       referenceType: z.enum(["revenue", "expense", "other"]), referenceId: z.number().int().nullable().optional(), matterId: z.number().int().nullable().optional(),
       documentNumber: z.string().optional(), description: z.string().min(2), reconciled: z.boolean().default(false),
     })).mutation(({ ctx, input }) => db.createCashTransaction({ ...input, transactionDate: new Date(input.transactionDate), createdBy: ctx.user.id })),
+    update: accountantProcedure.input(z.object({
+      id: z.number().int(), transactionDate: z.number().int().optional(), type: z.enum(["receipt", "payment"]).optional(), amount: z.number().positive().optional(), paymentMethod: paymentMethod.optional(),
+      accountCode: cashAccountCode.optional(), category: cashCategory.optional(), referenceType: z.enum(["revenue", "expense", "other"]).optional(), referenceId: z.number().int().nullable().optional(), matterId: z.number().int().nullable().optional(),
+      documentNumber: z.string().optional(), description: z.string().min(2).optional(), reconciled: z.boolean().optional(),
+    })).mutation(({ input }) => db.updateCashTransaction(input.id, { ...input, transactionDate: input.transactionDate ? new Date(input.transactionDate) : undefined })),
     attachments: router({
       list: accountantProcedure.input(z.object({ cashTransactionId: z.number().int().positive() })).query(({ input }) => db.listCashAttachments(input.cashTransactionId)),
       upload: accountantProcedure.input(z.object({
