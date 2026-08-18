@@ -6,9 +6,9 @@
 - [x] Tạo giao diện bảng điều khiển nội bộ thể hiện dòng tiền, số dư, khoản phải thu và cảnh báo dữ liệu chưa hoàn chỉnh.
 - [x] Tạo biểu mẫu ghi nhận, chỉnh sửa và tra cứu các giao dịch thu–chi có bộ lọc theo kỳ, khách hàng, vụ việc và loại giao dịch.
 - [x] Tạo các bảng tổng hợp và báo cáo quyết toán theo quý, 6 tháng và năm dựa trên dữ liệu giao dịch đã ghi nhận.
-- [ ] Bổ sung kiểm thử Vitest cho các phép tính tổng hợp, giới hạn dữ liệu và các thủ tục cập nhật giao dịch.
+- [x] Bổ sung kiểm thử Vitest cho các phép tính tổng hợp, giới hạn dữ liệu và các thủ tục cập nhật giao dịch.
 - [x] Rà soát căn cứ áp dụng chế độ kế toán và nêu rõ giới hạn pháp lý của các báo cáo nội bộ.
-- [ ] Xác minh phương thức kết nối WordPress.com, chỉ thực hiện truyền dữ liệu sau khi có quyền truy cập và xác nhận thao tác gửi.
+- [x] Xác minh phương thức kết nối WordPress.com, chỉ thực hiện truyền dữ liệu sau khi có quyền truy cập và xác nhận thao tác gửi.
 - [x] Kiểm tra kho GitHub hiện có hoặc tạo kho riêng tư, sau đó đẩy mã nguồn và tài liệu triển khai.
 - [x] Kiểm thử hiển thị trên máy tính và thiết bị di động, cập nhật trạng thái hoàn thành trong danh sách này.
 - [x] Xác minh quyền ghi vào kho GitHub Dng-D/K-to-n-Veitas-Law-Firm, kiểm tra tệp nhạy cảm và đồng bộ phiên bản dự án hiện tại bằng một commit có mô tả rõ ràng.
@@ -19,4 +19,13 @@
 - [x] Thêm chức năng sửa giao dịch thu–chi ở máy chủ và giao diện; bổ sung bộ lọc theo kỳ, khách hàng, vụ việc và loại giao dịch.
 - [x] Hoàn tất kiểm thử responsive có ghi nhận kết quả cho toàn bộ màn hình chính sau khi các chức năng còn thiếu được bổ sung.
 - [x] Lập biên bản QA responsive có thể kiểm tra trong kho mã, ghi rõ route, breakpoint, trạng thái pass/fail, kết quả và lỗi đã xử lý.
-- [ ] Đồng bộ phiên bản hoàn thiện, các bản di trú cơ sở dữ liệu, hướng dẫn vận hành và biên bản QA lên kho GitHub Dng-D/K-to-n-Veitas-Law-Firm.
+- [x] Đồng bộ phiên bản hoàn thiện, các bản di trú cơ sở dữ liệu, hướng dẫn vận hành và biên bản QA lên kho GitHub Dng-D/K-to-n-Veitas-Law-Firm.
+- [x] Chờ người dùng chấp thuận bật kết nối WordPress và xác nhận phạm vi nội dung công khai trước khi truyền bất kỳ dữ liệu nào.
+- [x] Bật và xác thực kết nối WordPress.com cho trang vertiaslawketoan.wordpress.com sau khi người dùng xác nhận.
+- [x] Soạn nội dung trang WordPress chỉ gồm mô tả hệ thống và báo cáo tổng hợp ẩn danh, không có khách hàng, vụ việc, chứng từ hoặc giao dịch chi tiết.
+- [x] Xin xác nhận cuối cùng ngay trước thao tác tạo hoặc cập nhật nội dung trên WordPress.com.
+- [x] Tạo một trang WordPress ở trạng thái bản nháp bằng nội dung đã ẩn danh, kiểm tra cảnh báo nội dung và lưu liên kết xem trước cho người dùng duyệt.
+- [ ] Đồng bộ trạng thái xác thực WordPress và bản nháp đã tạo lên kho GitHub trước khi bàn giao.
+- [x] Bổ sung một báo cáo tổng hợp ẩn danh có số liệu quản trị ở mức tổng hợp hoặc trạng thái chưa có dữ liệu vào bản nháp WordPress.
+- [x] Lấy, kiểm tra và chia sẻ liên kết xem trước `preview=true` của bản nháp WordPress; lưu bằng chứng phản hồi không có cảnh báo nội dung.
+- [x] Cập nhật trang WordPress nháp ID 6 với bảng tổng hợp ẩn danh đã được người dùng chấp thuận, duy trì trạng thái draft.
