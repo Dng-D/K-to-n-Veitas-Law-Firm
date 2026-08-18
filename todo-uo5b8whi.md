@@ -75,4 +75,5 @@
 - [x] Chờ lần chạy đầu tiên, kiểm tra log callback thành công của tác vụ thu hồi quyền production và bổ sung biên bản vận hành.
 - [x] Bổ sung kiểm thử, QA responsive, hướng dẫn vận hành và đồng bộ phiên bản cho các tính năng quản trị quyền mới.
 - [x] Cập nhật hướng dẫn vận hành cho thời hạn riêng theo từng quyền, bao gồm nguyên tắc quyền hết hạn độc lập.
-- [ ] Lưu checkpoint và đồng bộ phiên bản cuối của giao diện thời hạn riêng theo từng quyền.
+- [x] Lưu checkpoint và đồng bộ phiên bản cuối của giao diện thời hạn riêng theo từng quyền.
+- [ ] Commit, push GitHub và xác nhận trạng thái sạch cho phiên bản thời hạn riêng từng quyền.
