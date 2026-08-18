@@ -15,6 +15,13 @@
       "when": 1787047732946,
       "tag": "0001_mute_wolfpack",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787048936070,
+      "tag": "0002_supreme_wallow",
+      "breakpoints": true
     }
   ]
 }

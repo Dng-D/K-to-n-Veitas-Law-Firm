@@ -14,9 +14,16 @@
 - [x] Thiết kế responsive cho máy tính, máy tính bảng và điện thoại.
 - [x] Viết và chạy kiểm thử Vitest cho tính toán KPI, phân quyền và các luồng tạo dữ liệu quan trọng.
 - [x] Kiểm tra giao diện trên kích thước desktop và mobile; xử lý lỗi hiển thị nếu có.
-- [ ] Hoàn thiện hướng dẫn sử dụng, rà soát todo và lưu checkpoint bàn giao.
+- [x] Hoàn thiện hướng dẫn sử dụng, rà soát todo và lưu checkpoint bàn giao.
 - [x] Hoàn thiện ma trận phân quyền tRPC: nhân viên kế toán được xem/tạo/sửa số liệu; chỉ chủ sở hữu được xóa dữ liệu và quản trị quyền.
 - [x] Bổ sung kiểm thử Vitest xác nhận giới hạn quyền thao tác giữa chủ sở hữu và nhân viên kế toán.
 - [x] Bổ sung Vitest cho mutation tạo hồ sơ, doanh thu, chi phí và nhật ký thu–chi, gồm nhánh thành công và kiểm tra đầu vào không hợp lệ.
 - [x] Bổ sung Vitest cho nhánh đầu vào không hợp lệ của tạo hồ sơ, chi phí và nhật ký thu–chi.
-- [ ] Lưu checkpoint bàn giao sau khi hoàn tất rà soát chất lượng và todo.
+- [x] Lưu checkpoint bàn giao sau khi hoàn tất rà soát chất lượng và todo.
+- [x] Thiết kế luồng xuất báo cáo tài chính và sổ thu–chi sang Excel hoặc PDF từ dữ liệu thực tế.
+- [x] Bổ sung lưu trữ S3 và mô hình dữ liệu metadata cho ảnh/PDF hóa đơn, chứng từ gắn với giao dịch thu–chi.
+- [x] Xây dựng giao diện tải lên, xem và mở tệp chứng từ tại từng giao dịch thu–chi.
+- [x] Bổ sung xuất báo cáo Excel/PDF theo kỳ và xuất sổ thu–chi Excel/PDF.
+- [x] Nâng cấp dashboard bằng biểu đồ trực quan so sánh doanh thu và chi phí theo tháng.
+- [ ] Viết Vitest, kiểm tra giao diện desktop/mobile, rà soát todo và lưu checkpoint cho phiên bản cập nhật.
+- [ ] Lưu checkpoint mới cho tính năng xuất Excel/PDF, chứng từ đính kèm và biểu đồ dashboard.

@@ -16,6 +16,12 @@ Veritas Finance Desk là ứng dụng quản lý tài chính nội bộ cho văn
 | 4 | Ghi nhận tại **Nhật ký thu–chi** khi tiền thực tế vào/ra quỹ hoặc tài khoản ngân hàng. | Dashboard và báo cáo cập nhật thực thu, thực chi và dòng tiền thuần. |
 | 5 | Rà soát **Báo cáo theo kỳ** theo Q1–Q4, 6 tháng hoặc cả năm. | So sánh doanh thu, chi phí, dòng tiền và công nợ theo kỳ. |
 
+## Xuất dữ liệu và chứng từ đính kèm
+
+Tại **Báo cáo theo kỳ**, chọn đúng kỳ báo cáo rồi nhấn **Xuất Excel** hoặc **Xuất PDF**. Tệp xuất chứa các chỉ tiêu tổng hợp và bảng doanh thu, chi phí, dòng tiền theo từng tháng của kỳ đang xem. Tại **Nhật ký thu–chi**, hai nút xuất tạo sổ thu–chi từ toàn bộ giao dịch đã ghi nhận, bao gồm ngày giao dịch, loại thu/chi, diễn giải, hồ sơ, chứng từ, phương thức, số tiền và trạng thái đối chiếu.
+
+Để đính kèm hóa đơn hoặc chứng từ cho một dòng thu–chi đã tạo, nhấn biểu tượng kẹp giấy tại cột **Tệp**. Hệ thống chấp nhận tệp **PDF, JPG, PNG và WEBP**, với dung lượng không quá **8 MB** mỗi tệp. Tệp được lưu theo từng giao dịch; có thể mở lại từ cửa sổ chứng từ đính kèm. Không tải lên tài liệu không liên quan đến giao dịch hoặc có dữ liệu nhạy cảm vượt quá phạm vi cần thiết cho chứng từ kế toán.
+
 ## Phân quyền
 
 | Thao tác | Chủ sở hữu (admin) | Nhân viên kế toán |

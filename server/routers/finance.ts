@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
+import { storagePut } from "../storage";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ chủ sở hữu được phép thực hiện thao tác này." });
@@ -18,6 +19,12 @@ const accountantProcedure = protectedProcedure.use(({ ctx, next }) => {
 const optionalDate = z.number().int().nullable().optional();
 const matterStatus = z.enum(["draft", "active", "on_hold", "completed", "closed"]);
 const paymentMethod = z.enum(["bank", "cash", "transfer", "other"]);
+const attachmentTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
+const maxAttachmentBytes = 8 * 1024 * 1024;
+
+function safeAttachmentName(fileName: string) {
+  return fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 180) || "chung-tu";
+}
 
 export const financeRouter = router({
   access: accountantProcedure.query(({ ctx }) => ({
@@ -74,6 +81,31 @@ export const financeRouter = router({
       referenceType: z.enum(["revenue", "expense", "other"]), referenceId: z.number().int().nullable().optional(), matterId: z.number().int().nullable().optional(),
       documentNumber: z.string().optional(), description: z.string().min(2), reconciled: z.boolean().default(false),
     })).mutation(({ ctx, input }) => db.createCashTransaction({ ...input, transactionDate: new Date(input.transactionDate), createdBy: ctx.user.id })),
+    attachments: router({
+      list: accountantProcedure.input(z.object({ cashTransactionId: z.number().int().positive() })).query(({ input }) => db.listCashAttachments(input.cashTransactionId)),
+      upload: accountantProcedure.input(z.object({
+        cashTransactionId: z.number().int().positive(),
+        originalFileName: z.string().min(1).max(255),
+        contentType: z.enum(attachmentTypes),
+        dataBase64: z.string().min(1),
+      })).mutation(async ({ ctx, input }) => {
+        const transaction = await db.getCashTransactionById(input.cashTransactionId);
+        if (!transaction) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy giao dịch thu–chi." });
+        const bytes = Buffer.from(input.dataBase64, "base64");
+        if (!bytes.length || bytes.length > maxAttachmentBytes) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Tệp chứng từ phải nhỏ hơn hoặc bằng 8 MB." });
+        const safeName = safeAttachmentName(input.originalFileName);
+        const { key, url } = await storagePut(`cash-attachments/${ctx.user.id}/${input.cashTransactionId}/${safeName}`, bytes, input.contentType);
+        return db.createCashAttachment({
+          cashTransactionId: input.cashTransactionId,
+          originalFileName: input.originalFileName,
+          contentType: input.contentType,
+          storageKey: key,
+          storageUrl: url,
+          fileSize: bytes.length,
+          createdBy: ctx.user.id,
+        });
+      }),
+    }),
     delete: adminProcedure.input(z.object({ id: z.number().int() })).mutation(({ input }) => db.deleteById("cash", input.id)),
   }),
 });

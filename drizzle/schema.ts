@@ -107,6 +107,18 @@ export const cashTransactions = mysqlTable("cashTransactions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const cashAttachments = mysqlTable("cashAttachments", {
+  id: int("id").autoincrement().primaryKey(),
+  cashTransactionId: int("cashTransactionId").notNull().references(() => cashTransactions.id),
+  originalFileName: varchar("originalFileName", { length: 255 }).notNull(),
+  contentType: varchar("contentType", { length: 128 }).notNull(),
+  storageKey: varchar("storageKey", { length: 512 }).notNull(),
+  storageUrl: varchar("storageUrl", { length: 1024 }).notNull(),
+  fileSize: int("fileSize").notNull(),
+  createdBy: int("createdBy").references(() => users.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Client = typeof clients.$inferSelect;
@@ -114,3 +126,4 @@ export type LegalMatter = typeof legalMatters.$inferSelect;
 export type Revenue = typeof revenues.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type CashTransaction = typeof cashTransactions.$inferSelect;
+export type CashAttachment = typeof cashAttachments.$inferSelect;

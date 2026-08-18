@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
+  cashAttachments,
   cashTransactions,
   clients,
   expenses,
@@ -270,6 +271,41 @@ export async function createCashTransaction(input: {
     ...input, amount: input.amount.toFixed(2), referenceId: input.referenceId ?? null, matterId: input.matterId ?? null,
     documentNumber: input.documentNumber || null,
   });
+  return { success: true };
+}
+
+export async function getCashTransactionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select({ id: cashTransactions.id }).from(cashTransactions).where(eq(cashTransactions.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function listCashAttachments(cashTransactionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    id: cashAttachments.id,
+    originalFileName: cashAttachments.originalFileName,
+    contentType: cashAttachments.contentType,
+    storageUrl: cashAttachments.storageUrl,
+    fileSize: cashAttachments.fileSize,
+    createdAt: cashAttachments.createdAt,
+  }).from(cashAttachments).where(eq(cashAttachments.cashTransactionId, cashTransactionId)).orderBy(desc(cashAttachments.createdAt));
+}
+
+export async function createCashAttachment(input: {
+  cashTransactionId: number;
+  originalFileName: string;
+  contentType: string;
+  storageKey: string;
+  storageUrl: string;
+  fileSize: number;
+  createdBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(cashAttachments).values(input);
   return { success: true };
 }
 
