@@ -149,6 +149,35 @@ export const accountingPeriodActions = mysqlTable("accountingPeriodActions", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const reportApprovalRequests = mysqlTable("reportApprovalRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  periodId: int("periodId").notNull().references(() => accountingPeriods.id),
+  reportHash: varchar("reportHash", { length: 64 }).notNull(),
+  snapshotJson: text("snapshotJson").notNull(),
+  status: mysqlEnum("status", ["pending_level_1", "pending_level_2", "rejected", "internally_attested"]).default("pending_level_1").notNull(),
+  requestedBy: int("requestedBy").notNull().references(() => users.id),
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  levelOneBy: int("levelOneBy").references(() => users.id),
+  levelOneAt: timestamp("levelOneAt"),
+  levelTwoBy: int("levelTwoBy").references(() => users.id),
+  levelTwoAt: timestamp("levelTwoAt"),
+  rejectedBy: int("rejectedBy").references(() => users.id),
+  rejectedAt: timestamp("rejectedAt"),
+  rejectionReason: text("rejectionReason"),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const reportApprovalActions = mysqlTable("reportApprovalActions", {
+  id: int("id").autoincrement().primaryKey(),
+  requestId: int("requestId").notNull().references(() => reportApprovalRequests.id),
+  action: mysqlEnum("action", ["request", "approve_level_1", "approve_level_2", "reject"]).notNull(),
+  actorId: int("actorId").notNull().references(() => users.id),
+  reason: text("reason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Client = typeof clients.$inferSelect;
@@ -159,3 +188,5 @@ export type CashTransaction = typeof cashTransactions.$inferSelect;
 export type CashAttachment = typeof cashAttachments.$inferSelect;
 export type AccountingPeriod = typeof accountingPeriods.$inferSelect;
 export type AccountingPeriodAction = typeof accountingPeriodActions.$inferSelect;
+export type ReportApprovalRequest = typeof reportApprovalRequests.$inferSelect;
+export type ReportApprovalAction = typeof reportApprovalActions.$inferSelect;

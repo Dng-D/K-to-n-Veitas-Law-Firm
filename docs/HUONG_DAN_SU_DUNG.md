@@ -51,6 +51,24 @@ Tại **Phê duyệt & khóa sổ**, chọn đúng tháng cần kiểm soát. H�
 
 Người gửi yêu cầu không thể tự phê duyệt kỳ của mình. Nếu doanh nghiệp có một người vận hành, cần có một tài khoản người lập riêng để duy trì nguyên tắc phân tách nhiệm vụ. Không khóa sổ nếu chưa kiểm tra chứng từ gốc; trạng thái “Đạt” chỉ phản ánh các điều kiện dữ liệu mà hệ thống kiểm tra tự động.
 
+## Phê duyệt báo cáo hai cấp và hồ sơ xác nhận nội bộ
+
+Sau khi kỳ đã **khóa sổ**, mở **Phê duyệt báo cáo**. Người lập nhấn **Gửi phê duyệt cấp 1** để hệ thống tạo ảnh chụp dữ liệu đối chiếu và mã hàm băm SHA-256. Một quản trị viên khác người lập thực hiện **Phê duyệt cấp 1**; một quản trị viên thứ ba, khác cả người lập và cấp 1, thực hiện **Xác nhận cấp 2**. Khi hoàn tất, trạng thái là **Đã xác nhận nội bộ** và có thể xuất biên bản PDF/Excel.
+
+| Thao tác | Quy tắc kiểm soát |
+|---|---|
+| Gửi yêu cầu | Chỉ áp dụng cho kỳ đã khóa sổ. Hệ thống lưu mã hàm băm, người lập và thời điểm tạo. |
+| Cấp 1 | Không do người lập tự thực hiện. |
+| Cấp 2 | Không do người lập hoặc người phê duyệt cấp 1 thực hiện. |
+| Từ chối | Nhập lý do; người lập có thể lập yêu cầu mới sau khi xử lý. |
+| Xuất biên bản | Lưu cùng hồ sơ kiểm soát kỳ; tệp gồm trạng thái, mã hàm băm và dấu vết hai cấp. |
+
+> Tính năng hiện tại là **hồ sơ phê duyệt điện tử nội bộ**, không phải tuyên bố đã ký số bằng chứng thư. Chỉ coi báo cáo đã ký số khi có tích hợp nhà cung cấp chữ ký số, xác thực chủ thể ký và kiểm tra hiệu lực chứng thư. Xem `docs/GIOI_HAN_KY_SO.md` để biết điều kiện tích hợp.
+
+## Nhắc chốt sổ trên trang chủ
+
+Từ ngày 25 đến ngày cuối tháng theo múi giờ Việt Nam, trang chủ hiển thị banner **Nhắc chốt sổ**. Banner nêu số ngày còn lại, trạng thái kỳ và các điều kiện đang chặn gửi phê duyệt. Nếu kỳ đã khóa, banner chuyển thành liên kết đến **Phê duyệt báo cáo**. Đây là thông báo trong ứng dụng, chỉ hiển thị khi người dùng mở trang chủ; hệ thống không gửi email hoặc thông báo đẩy tự động.
+
 ## Xuất dữ liệu và chứng từ đính kèm
 
 Tại **Báo cáo theo kỳ**, chọn đúng kỳ báo cáo rồi nhấn **Xuất Excel** hoặc **Xuất PDF**. Tệp xuất chứa các chỉ tiêu tổng hợp và bảng doanh thu, chi phí, dòng tiền theo từng tháng của kỳ đang xem. Tại **Nhật ký thu–chi**, hai nút xuất tạo sổ thu–chi từ toàn bộ giao dịch đã ghi nhận, bao gồm ngày giao dịch, loại thu/chi, nhóm nghiệp vụ, tài khoản theo dõi, diễn giải, hồ sơ, chứng từ, phương thức, số tiền và trạng thái đối chiếu.

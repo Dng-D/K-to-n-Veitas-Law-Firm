@@ -1,11 +1,17 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "../db";
+import { ENV } from "../_core/env";
 import { protectedProcedure, router } from "../_core/trpc";
 import { storagePut } from "../storage";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ chủ sở hữu được phép thực hiện thao tác này." });
+  return next({ ctx });
+});
+
+const ownerProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.openId !== ENV.ownerOpenId) throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ chủ sở hữu dự án được phép quản lý vai trò tài khoản." });
   return next({ ctx });
 });
 
@@ -39,8 +45,8 @@ function safeAttachmentName(fileName: string) {
 export const financeRouter = router({
   access: accountantProcedure.query(({ ctx }) => ({
     role: ctx.user.role, canView: true, canCreate: true, canEdit: true,
-    canDelete: ctx.user.role === "admin", canManageAccess: ctx.user.role === "admin",
-    canRequestApproval: true, canApprovePeriod: ctx.user.role === "admin", canLockPeriod: ctx.user.role === "admin",
+    canDelete: ctx.user.role === "admin", canManageAccess: ctx.user.openId === ENV.ownerOpenId,
+    canRequestApproval: true, canApprovePeriod: ctx.user.role === "admin", canLockPeriod: ctx.user.role === "admin", canApproveReport: ctx.user.role === "admin",
   })),
   dashboard: accountantProcedure.input(z.object({ start: optionalDate, end: optionalDate }).optional()).query(({ input }) =>
     db.getDashboardData(input?.start ? new Date(input.start) : undefined, input?.end ? new Date(input.end) : undefined)),
@@ -51,6 +57,17 @@ export const financeRouter = router({
     reject: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectPeriod(input.periodKey, ctx.user.id, input.reason)),
     lock: adminProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.lockPeriod(input.periodKey, ctx.user.id, input.note)),
     reopen: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.reopenPeriod(input.periodKey, ctx.user.id, input.reason)),
+  }),
+  reportApproval: router({
+    overview: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getReportApprovalOverview(input.periodKey)),
+    request: accountantProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.requestReportApproval(input.periodKey, ctx.user.id, input.note)),
+    approveLevelOne: adminProcedure.input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelOne(input.requestId, ctx.user.id, input.note)),
+    approveLevelTwo: adminProcedure.input(z.object({ requestId: z.number().int().positive(), note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approveReportLevelTwo(input.requestId, ctx.user.id, input.note)),
+    reject: adminProcedure.input(z.object({ requestId: z.number().int().positive(), reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectReportApproval(input.requestId, ctx.user.id, input.reason)),
+  }),
+  accessControl: router({
+    listUsers: ownerProcedure.query(() => db.listSystemUsers()),
+    setUserRole: ownerProcedure.input(z.object({ userId: z.number().int().positive(), role: z.enum(["admin", "user"]) })).mutation(({ input }) => db.setSystemUserRole(input.userId, input.role)),
   }),
   reconciliationReport: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getReconciliationReport(input.periodKey)),
   matters: router({

@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   accountingPeriodActions,
@@ -8,6 +9,8 @@ import {
   clients,
   expenses,
   legalMatters,
+  reportApprovalActions,
+  reportApprovalRequests,
   revenues,
   type InsertUser,
   users,
@@ -15,8 +18,10 @@ import {
 import { ENV } from "./_core/env";
 
 export type AccountingPeriodStatus = "open" | "pending_approval" | "rejected" | "approved" | "locked";
+export type ReportApprovalStatus = "pending_level_1" | "pending_level_2" | "rejected" | "internally_attested";
 
 type PeriodAction = "request" | "approve" | "reject" | "lock" | "reopen";
+type ReportApprovalAction = "request" | "approve_level_1" | "approve_level_2" | "reject";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -56,6 +61,26 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+export async function listSystemUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ id: users.id, openId: users.openId, name: users.name, email: users.email, role: users.role, lastSignedIn: users.lastSignedIn }).from(users).orderBy(asc(users.name), asc(users.id));
+}
+
+export async function setSystemUserRole(userId: number, role: "admin" | "user") {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const target = (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
+  if (!target) throw new Error("Không tìm thấy tài khoản cần cập nhật.");
+  if (target.openId === ENV.ownerOpenId && role !== "admin") throw new Error("Không thể hạ quyền của chủ sở hữu dự án.");
+  if (target.role === "admin" && role === "user") {
+    const administrators = await db.select({ id: users.id }).from(users).where(eq(users.role, "admin"));
+    if (administrators.length <= 1) throw new Error("Hệ thống phải luôn có ít nhất một quản trị viên.");
+  }
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+  return { success: true };
 }
 
 export function toPeriodKey(date: Date) {
@@ -562,6 +587,128 @@ export async function getReconciliationReport(periodKey: string) {
     control: overview.control,
     rows,
   };
+}
+
+function stableStringify(value: unknown): string {
+  if (value instanceof Date) return JSON.stringify(value.toISOString());
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return `{${Object.keys(record).sort().map(key => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+async function buildApprovalSnapshot(periodKey: string) {
+  const [overview, reconciliation] = await Promise.all([getAccountingPeriodOverview(periodKey), getReconciliationReport(periodKey)]);
+  const snapshot = {
+    schemaVersion: 1,
+    periodKey,
+    periodStatus: overview.period.status,
+    lockedAt: overview.period.lockedAt,
+    control: reconciliation.control,
+    rows: reconciliation.rows.map(row => ({
+      id: row.id,
+      transactionDate: row.transactionDate,
+      type: row.type,
+      amount: String(row.amount),
+      documentNumber: row.documentNumber,
+      description: row.description,
+      referenceType: row.referenceType,
+      reconciled: row.reconciled,
+      attachmentCount: row.attachmentCount,
+      updatedAt: row.updatedAt,
+    })),
+  };
+  const snapshotJson = stableStringify(snapshot);
+  return { snapshotJson, reportHash: createHash("sha256").update(snapshotJson).digest("hex") };
+}
+
+async function getLatestReportApproval(periodId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(reportApprovalRequests).where(eq(reportApprovalRequests.periodId, periodId)).orderBy(desc(reportApprovalRequests.requestedAt)).limit(1);
+  return rows[0];
+}
+
+async function getPeriodKeyById(periodId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const rows = await db.select({ periodKey: accountingPeriods.periodKey }).from(accountingPeriods).where(eq(accountingPeriods.id, periodId)).limit(1);
+  if (!rows[0]) throw new Error("Không tìm thấy kỳ kế toán của yêu cầu.");
+  return rows[0].periodKey;
+}
+
+async function recordReportApprovalAction(requestId: number, action: ReportApprovalAction, actorId: number, reason?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(reportApprovalActions).values({ requestId, action, actorId, reason: reason || null });
+}
+
+export async function getReportApprovalOverview(periodKey: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period) return { period: { periodKey, status: "open" as AccountingPeriodStatus }, report: null, actions: [] };
+  const [report, db] = await Promise.all([getLatestReportApproval(period.id), getDb()]);
+  if (!report || !db) return { period, report: null, actions: [] };
+  const actions = await db.select({
+    id: reportApprovalActions.id,
+    action: reportApprovalActions.action,
+    reason: reportApprovalActions.reason,
+    actorId: reportApprovalActions.actorId,
+    actorName: users.name,
+    createdAt: reportApprovalActions.createdAt,
+  }).from(reportApprovalActions).leftJoin(users, eq(reportApprovalActions.actorId, users.id)).where(eq(reportApprovalActions.requestId, report.id)).orderBy(asc(reportApprovalActions.createdAt));
+  return { period, report, actions };
+}
+
+export async function requestReportApproval(periodKey: string, actorId: number, note?: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period || period.status !== "locked") throw new Error("Chỉ báo cáo của kỳ đã khóa sổ mới được gửi phê duyệt hai cấp.");
+  const existing = await getLatestReportApproval(period.id);
+  if (existing && ["pending_level_1", "pending_level_2"].includes(existing.status)) throw new Error("Báo cáo của kỳ này đang trong quy trình phê duyệt.");
+  const snapshot = await buildApprovalSnapshot(periodKey);
+  if (existing?.status === "internally_attested" && existing.reportHash === snapshot.reportHash) throw new Error("Phiên bản báo cáo hiện tại đã được xác nhận nội bộ đủ hai cấp.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(reportApprovalRequests).values({ periodId: period.id, reportHash: snapshot.reportHash, snapshotJson: snapshot.snapshotJson, status: "pending_level_1", requestedBy: actorId, note: note || null });
+  const created = await getLatestReportApproval(period.id);
+  if (!created) throw new Error("Không thể tạo yêu cầu phê duyệt báo cáo.");
+  await recordReportApprovalAction(created.id, "request", actorId, note);
+  return getReportApprovalOverview(periodKey);
+}
+
+export async function approveReportLevelOne(requestId: number, actorId: number, note?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const current = (await db.select().from(reportApprovalRequests).where(eq(reportApprovalRequests.id, requestId)).limit(1))[0];
+  if (!current || current.status !== "pending_level_1") throw new Error("Yêu cầu không ở trạng thái chờ phê duyệt cấp 1.");
+  if (current.requestedBy === actorId) throw new Error("Người lập báo cáo không được tự phê duyệt cấp 1.");
+  await db.update(reportApprovalRequests).set({ status: "pending_level_2", levelOneBy: actorId, levelOneAt: new Date(), note: note || current.note }).where(eq(reportApprovalRequests.id, current.id));
+  await recordReportApprovalAction(current.id, "approve_level_1", actorId, note);
+  return getReportApprovalOverview(await getPeriodKeyById(current.periodId));
+}
+
+export async function approveReportLevelTwo(requestId: number, actorId: number, note?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const current = (await db.select().from(reportApprovalRequests).where(eq(reportApprovalRequests.id, requestId)).limit(1))[0];
+  if (!current || current.status !== "pending_level_2") throw new Error("Yêu cầu không ở trạng thái chờ phê duyệt cấp 2.");
+  if (current.requestedBy === actorId || current.levelOneBy === actorId) throw new Error("Người lập và người phê duyệt cấp 1 không được tự phê duyệt cấp 2.");
+  await db.update(reportApprovalRequests).set({ status: "internally_attested", levelTwoBy: actorId, levelTwoAt: new Date(), note: note || current.note }).where(eq(reportApprovalRequests.id, current.id));
+  await recordReportApprovalAction(current.id, "approve_level_2", actorId, note);
+  return getReportApprovalOverview(await getPeriodKeyById(current.periodId));
+}
+
+export async function rejectReportApproval(requestId: number, actorId: number, reason: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const current = (await db.select().from(reportApprovalRequests).where(eq(reportApprovalRequests.id, requestId)).limit(1))[0];
+  if (!current || !["pending_level_1", "pending_level_2"].includes(current.status)) throw new Error("Yêu cầu không ở trạng thái có thể từ chối.");
+  if (current.requestedBy === actorId) throw new Error("Người lập báo cáo không được tự từ chối yêu cầu của mình.");
+  if (current.status === "pending_level_2" && current.levelOneBy === actorId) throw new Error("Người đã phê duyệt cấp 1 không được từ chối ở cấp 2.");
+  await db.update(reportApprovalRequests).set({ status: "rejected", rejectedBy: actorId, rejectedAt: new Date(), rejectionReason: reason }).where(eq(reportApprovalRequests.id, current.id));
+  await recordReportApprovalAction(current.id, "reject", actorId, reason);
+  return getReportApprovalOverview(await getPeriodKeyById(current.periodId));
 }
 
 export async function deleteById(table: "matter" | "revenue" | "expense" | "cash", id: number) {

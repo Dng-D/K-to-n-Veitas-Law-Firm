@@ -40,3 +40,14 @@
 - [x] Viết hướng dẫn vận hành cho người dùng về gửi phê duyệt, phê duyệt/từ chối, khóa/mở kỳ và xuất báo cáo đối chiếu Excel/PDF.
 - [x] Đóng gói và gửi kỹ năng `veritas-monthly-accounting-close` cho người dùng sau khi hoàn tất nghiệm thu dự án.
 - [x] Đồng bộ phiên bản mới gồm quy trình khóa sổ, báo cáo đối chiếu, logo, hướng dẫn và bản di trú lên kho GitHub Veritas.
+- [x] Rà soát quy định và ranh giới kỹ thuật giữa hồ sơ phê duyệt điện tử nội bộ với chữ ký số có chứng thư hợp lệ.
+- [x] Thiết kế hai cấp phê duyệt độc lập cho báo cáo kỳ, bao gồm người lập, người phê duyệt cấp 1, người phê duyệt cấp 2 và dấu vết bất biến.
+- [x] Triển khai hồ sơ ký số nội bộ có hàm băm báo cáo, thời điểm ký, người ký và trạng thái xác thực; không tuyên bố có giá trị chứng thư số khi chưa tích hợp CA.
+- [x] Bổ sung giao diện yêu cầu/phê duyệt hai cấp và tải biên bản xác thực báo cáo cho kỳ kế toán.
+- [x] Hiển thị thông báo nhắc chốt sổ cuối tháng trên trang chủ dựa trên ngày hệ thống và trạng thái kỳ hiện tại.
+- [x] Xác định và tài liệu hóa phương án tích hợp nhà cung cấp chữ ký số; việc kết nối chỉ thực hiện khi người dùng cung cấp nhà cung cấp, tài liệu API và thông tin xác thực.
+- [x] Bổ sung kiểm thử, hướng dẫn vận hành và kiểm tra responsive cho các chức năng mới.
+- [x] Cho phép chủ sở hữu chỉ định các tài khoản quản trị viên phê duyệt trong giao diện quyền truy cập, tạo đủ người độc lập cho luồng báo cáo hai cấp.
+- [x] Giới hạn API danh sách và cập nhật vai trò chỉ cho chủ sở hữu dự án, không cho quản trị viên thông thường thay đổi quyền người dùng.
+- [ ] Đồng bộ phiên bản phê duyệt hai cấp, hồ sơ xác nhận nội bộ và nhắc chốt sổ cuối tháng lên kho GitHub Veritas.
+- [ ] Lưu SHA commit và checkpoint bàn giao sau khi đẩy thành công phiên bản nâng cấp này lên GitHub.

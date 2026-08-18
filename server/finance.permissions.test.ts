@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("./_core/env", () => ({ ENV: { ownerOpenId: "admin-test-user" } }));
+
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 

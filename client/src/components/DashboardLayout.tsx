@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BadgeDollarSign, BriefcaseBusiness, ChartNoAxesCombined, FileBarChart2, Landmark, LockKeyhole, LogOut, PanelLeft, ReceiptText, Scale, ShieldCheck, WalletCards } from "lucide-react";
+import { BadgeDollarSign, BriefcaseBusiness, ChartNoAxesCombined, FileBarChart2, FileSignature, Landmark, LockKeyhole, LogOut, PanelLeft, ReceiptText, Scale, ShieldCheck, WalletCards } from "lucide-react";
 import { CSSProperties, useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -18,6 +18,7 @@ const menuItems = [
   { icon: Landmark, label: "Nhật ký thu–chi", path: "/thu-chi" },
   { icon: FileBarChart2, label: "Báo cáo theo kỳ", path: "/bao-cao" },
   { icon: LockKeyhole, label: "Phê duyệt & khóa sổ", path: "/ky-ke-toan" },
+  { icon: FileSignature, label: "Phê duyệt báo cáo", path: "/phe-duyet-bao-cao" },
   { icon: ShieldCheck, label: "Quyền truy cập", path: "/quyen-truy-cap" },
 ];
 
