@@ -60,4 +60,4 @@
 - [x] Bổ sung kiểm thử phân quyền, kiểm tra responsive, đồng bộ GitHub và lưu checkpoint bàn giao.
 - [x] Khôi phục xác thực GitHub cho kho Dng-D/K-to-n-Veitas-Law-Firm và xác minh commit phân quyền đã xuất hiện trên nhánh main.
 - [x] Kiểm tra responsive các trang phân quyền, khóa sổ và phê duyệt báo cáo ở khung nhìn máy tính bảng và di động; cập nhật biên bản QA theo từng breakpoint.
-- [ ] Lưu checkpoint bàn giao cuối sau khi hoàn thành kiểm tra responsive, cập nhật QA và đồng bộ GitHub.
+- [x] Lưu checkpoint bàn giao cuối sau khi hoàn thành kiểm tra responsive, cập nhật QA và đồng bộ GitHub.
