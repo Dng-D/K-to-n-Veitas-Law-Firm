@@ -30,6 +30,7 @@ const cashCategory = z.enum([
 ]);
 const attachmentTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"] as const;
 const maxAttachmentBytes = 8 * 1024 * 1024;
+const periodKey = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Kỳ kế toán phải có định dạng YYYY-MM.");
 
 function safeAttachmentName(fileName: string) {
   return fileName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-").slice(0, 180) || "chung-tu";
@@ -39,9 +40,19 @@ export const financeRouter = router({
   access: accountantProcedure.query(({ ctx }) => ({
     role: ctx.user.role, canView: true, canCreate: true, canEdit: true,
     canDelete: ctx.user.role === "admin", canManageAccess: ctx.user.role === "admin",
+    canRequestApproval: true, canApprovePeriod: ctx.user.role === "admin", canLockPeriod: ctx.user.role === "admin",
   })),
   dashboard: accountantProcedure.input(z.object({ start: optionalDate, end: optionalDate }).optional()).query(({ input }) =>
     db.getDashboardData(input?.start ? new Date(input.start) : undefined, input?.end ? new Date(input.end) : undefined)),
+  closing: router({
+    overview: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getAccountingPeriodOverview(input.periodKey)),
+    request: accountantProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.requestPeriodApproval(input.periodKey, ctx.user.id, input.note)),
+    approve: adminProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.approvePeriod(input.periodKey, ctx.user.id, input.note)),
+    reject: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.rejectPeriod(input.periodKey, ctx.user.id, input.reason)),
+    lock: adminProcedure.input(z.object({ periodKey, note: z.string().max(1000).optional() })).mutation(({ ctx, input }) => db.lockPeriod(input.periodKey, ctx.user.id, input.note)),
+    reopen: adminProcedure.input(z.object({ periodKey, reason: z.string().min(5).max(1000) })).mutation(({ ctx, input }) => db.reopenPeriod(input.periodKey, ctx.user.id, input.reason)),
+  }),
+  reconciliationReport: accountantProcedure.input(z.object({ periodKey })).query(({ input }) => db.getReconciliationReport(input.periodKey)),
   matters: router({
     list: accountantProcedure.query(() => db.listMatters()),
     create: accountantProcedure.input(z.object({

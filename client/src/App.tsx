@@ -6,8 +6,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AccessPage, CashPage, DashboardPage, ExpensesPage, MattersPage, ReportsPage, RevenuesPage } from "./pages/FinancePages";
 import NotFound from "./pages/NotFound";
+import PeriodClosePage from "./pages/PeriodClosePage";
 
 function Router() {
-  return <DashboardLayout><Switch><Route path="/" component={DashboardPage} /><Route path="/ho-so" component={MattersPage} /><Route path="/doanh-thu" component={RevenuesPage} /><Route path="/chi-phi" component={ExpensesPage} /><Route path="/thu-chi" component={CashPage} /><Route path="/bao-cao" component={ReportsPage} /><Route path="/quyen-truy-cap" component={AccessPage} /><Route component={NotFound} /></Switch></DashboardLayout>;
+  return <DashboardLayout><Switch><Route path="/" component={DashboardPage} /><Route path="/ho-so" component={MattersPage} /><Route path="/doanh-thu" component={RevenuesPage} /><Route path="/chi-phi" component={ExpensesPage} /><Route path="/thu-chi" component={CashPage} /><Route path="/bao-cao" component={ReportsPage} /><Route path="/ky-ke-toan" component={PeriodClosePage} /><Route path="/quyen-truy-cap" component={AccessPage} /><Route component={NotFound} /></Switch></DashboardLayout>;
 }
 export default function App() { return <ErrorBoundary><ThemeProvider defaultTheme="light"><TooltipProvider><Toaster /><Router /></TooltipProvider></ThemeProvider></ErrorBoundary>; }

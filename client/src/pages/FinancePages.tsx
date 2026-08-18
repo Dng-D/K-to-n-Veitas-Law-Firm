@@ -77,6 +77,7 @@ const statusMap: Record<string, { label: string; className: string }> = {
   draft: { label: "Bản nháp", className: "badge-neutral" }, active: { label: "Đang thực hiện", className: "badge-info" }, on_hold: { label: "Tạm dừng", className: "badge-warning" }, completed: { label: "Hoàn thành", className: "badge-success" }, closed: { label: "Đã thanh lý", className: "badge-neutral" },
   issued: { label: "Chưa thu", className: "badge-warning" }, partial: { label: "Thu một phần", className: "badge-info" }, collected: { label: "Đã thu", className: "badge-success" }, overdue: { label: "Quá hạn", className: "badge-danger" }, void: { label: "Đã hủy", className: "badge-neutral" },
   unpaid: { label: "Chưa thanh toán", className: "badge-warning" }, paid: { label: "Đã thanh toán", className: "badge-success" }, deductible: { label: "Được trừ", className: "badge-success" }, non_deductible: { label: "Không được trừ", className: "badge-danger" }, pending: { label: "Chờ phân loại", className: "badge-warning" },
+  open: { label: "Đang mở", className: "badge-info" }, pending_approval: { label: "Chờ phê duyệt", className: "badge-warning" }, rejected: { label: "Bị từ chối", className: "badge-danger" }, approved: { label: "Đã phê duyệt", className: "badge-success" }, locked: { label: "Đã khóa sổ", className: "badge-neutral" },
 };
 function Status({ value }: { value: string }) { const item = statusMap[value] ?? { label: value, className: "badge-neutral" }; return <Badge className={item.className}>{item.label}</Badge>; }
 

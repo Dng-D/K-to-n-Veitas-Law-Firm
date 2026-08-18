@@ -37,9 +37,25 @@ Tại **Báo cáo theo kỳ**, khu vực **Đối chiếu liên sổ** so sánh 
 | Giao dịch chưa gắn loại đối chiếu | Giao dịch thu–chi chọn loại **Khác**. | Phân loại lại thành doanh thu, chi phí hoặc lưu lý do nghiệp vụ. |
 | Giao dịch chưa đối chiếu | Giao dịch chưa đánh dấu đã khớp sao kê/sổ quỹ. | Chỉ đánh dấu sau khi kiểm tra chứng từ gốc và nguồn đối chiếu. |
 
+## Phê duyệt và khóa sổ tháng
+
+Tại **Phê duyệt & khóa sổ**, chọn đúng tháng cần kiểm soát. Hệ thống hiển thị năm điều kiện trước khi gửi phê duyệt: chênh lệch thực thu, chênh lệch thực chi, giao dịch chờ phân loại, giao dịch chưa đối chiếu và giao dịch thiếu số chứng từ. Chỉ khi cả năm điều kiện đạt, nút **Gửi phê duyệt** mới có thể được sử dụng.
+
+| Bước | Người thực hiện | Thao tác | Kết quả |
+|---|---|---|---|
+| 1 | Nhân viên kế toán | Rà soát bảng điều kiện, số chứng từ, sao kê/sổ quỹ và danh mục chứng từ. | Kỳ vẫn ở trạng thái **Đang mở**. |
+| 2 | Nhân viên kế toán | Nhấn **Gửi phê duyệt** sau khi các điều kiện đạt. | Kỳ chuyển thành **Chờ phê duyệt** và hệ thống ghi nhật ký thao tác. |
+| 3 | Quản trị viên khác người gửi | Nhấn **Phê duyệt kỳ** hoặc **Từ chối** và nhập lý do nếu từ chối. | Kỳ chuyển thành **Đã phê duyệt** hoặc **Bị từ chối**. |
+| 4 | Quản trị viên | Nhấn **Khóa sổ tháng** sau khi đã phê duyệt. | Kỳ chuyển thành **Đã khóa sổ**; mọi tạo, sửa, xóa và đính kèm chứng từ thuộc tháng này bị chặn ở hệ thống. |
+| 5 | Quản trị viên | Chỉ dùng **Mở lại kỳ** khi cần điều chỉnh có căn cứ, đồng thời nhập lý do. | Kỳ trở lại **Đang mở** và lý do được lưu trong dấu vết kiểm soát. |
+
+Người gửi yêu cầu không thể tự phê duyệt kỳ của mình. Nếu doanh nghiệp có một người vận hành, cần có một tài khoản người lập riêng để duy trì nguyên tắc phân tách nhiệm vụ. Không khóa sổ nếu chưa kiểm tra chứng từ gốc; trạng thái “Đạt” chỉ phản ánh các điều kiện dữ liệu mà hệ thống kiểm tra tự động.
+
 ## Xuất dữ liệu và chứng từ đính kèm
 
 Tại **Báo cáo theo kỳ**, chọn đúng kỳ báo cáo rồi nhấn **Xuất Excel** hoặc **Xuất PDF**. Tệp xuất chứa các chỉ tiêu tổng hợp và bảng doanh thu, chi phí, dòng tiền theo từng tháng của kỳ đang xem. Tại **Nhật ký thu–chi**, hai nút xuất tạo sổ thu–chi từ toàn bộ giao dịch đã ghi nhận, bao gồm ngày giao dịch, loại thu/chi, nhóm nghiệp vụ, tài khoản theo dõi, diễn giải, hồ sơ, chứng từ, phương thức, số tiền và trạng thái đối chiếu.
+
+Tại **Phê duyệt & khóa sổ**, nút **Xuất Excel** và **Xuất PDF** tạo **Báo cáo đối chiếu chứng từ và sổ sách** cho đúng tháng đã chọn. Báo cáo có trạng thái kỳ, chỉ tiêu đối chiếu thu/chi, giao dịch thiếu số chứng từ, giao dịch chưa đối chiếu và danh mục chi tiết gồm ngày, số chứng từ, diễn giải, hồ sơ, số tiền, tình trạng đối chiếu và số tệp đính kèm. Lưu tệp xuất cùng bộ chứng từ kiểm soát; báo cáo này là ảnh chụp dữ liệu tại thời điểm xuất.
 
 Để đính kèm hóa đơn hoặc chứng từ cho một dòng thu–chi đã tạo, nhấn biểu tượng kẹp giấy tại cột **Tệp**. Hệ thống chấp nhận tệp **PDF, JPG, PNG và WEBP**, với dung lượng không quá **8 MB** mỗi tệp. Tệp được lưu theo từng giao dịch; có thể mở lại từ cửa sổ chứng từ đính kèm. Không tải lên tài liệu không liên quan đến giao dịch hoặc có dữ liệu nhạy cảm vượt quá phạm vi cần thiết cho chứng từ kế toán.
 
@@ -49,6 +65,8 @@ Tại **Báo cáo theo kỳ**, chọn đúng kỳ báo cáo rồi nhấn **Xuấ
 |---|---:|---:|
 | Xem dashboard và báo cáo | Có | Có |
 | Tạo/chỉnh sửa hồ sơ, doanh thu, chi phí, thu–chi | Có | Có |
+| Gửi yêu cầu phê duyệt kỳ | Có | Có |
+| Phê duyệt, từ chối, khóa hoặc mở lại kỳ | Có | Không |
 | Xóa dữ liệu nghiệp vụ | Có | Không |
 | Quản trị quyền tài khoản | Có | Không |
 

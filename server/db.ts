@@ -1,6 +1,8 @@
 import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
+  accountingPeriodActions,
+  accountingPeriods,
   cashAttachments,
   cashTransactions,
   clients,
@@ -11,6 +13,10 @@ import {
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+
+export type AccountingPeriodStatus = "open" | "pending_approval" | "rejected" | "approved" | "locked";
+
+type PeriodAction = "request" | "approve" | "reject" | "lock" | "reopen";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -50,6 +56,145 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result[0];
+}
+
+export function toPeriodKey(date: Date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export function isPeriodMutableStatus(status?: AccountingPeriodStatus) {
+  return !status || status === "open" || status === "rejected";
+}
+
+export function getPeriodBounds(periodKey: string) {
+  const matched = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(periodKey);
+  if (!matched) throw new Error("Kỳ kế toán phải có định dạng YYYY-MM.");
+  const year = Number(matched[1]);
+  const monthIndex = Number(matched[2]) - 1;
+  return {
+    start: new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0)),
+    end: new Date(Date.UTC(year, monthIndex + 1, 0, 23, 59, 59, 999)),
+  };
+}
+
+async function getPeriodByKey(periodKey: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(accountingPeriods).where(eq(accountingPeriods.periodKey, periodKey)).limit(1);
+  return rows[0];
+}
+
+async function ensurePeriod(periodKey: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const existing = await getPeriodByKey(periodKey);
+  if (existing) return existing;
+  await db.insert(accountingPeriods).values({ periodKey, status: "open" });
+  const created = await getPeriodByKey(periodKey);
+  if (!created) throw new Error("Không thể khởi tạo kỳ kế toán.");
+  return created;
+}
+
+export async function assertPeriodMutable(date: Date) {
+  const period = await getPeriodByKey(toPeriodKey(date));
+  if (period && !isPeriodMutableStatus(period.status)) {
+    throw new Error(`Kỳ ${period.periodKey} đang ở trạng thái ${period.status}; không thể thay đổi dữ liệu trước khi bị từ chối hoặc mở lại.`);
+  }
+}
+
+function isPeriodReady(control: { unreconciledCashCount: number; otherReferenceCount: number; receiptDifference: number; paymentDifference: number; missingDocumentCount: number }) {
+  return control.unreconciledCashCount === 0 && control.otherReferenceCount === 0 && control.receiptDifference === 0 && control.paymentDifference === 0 && control.missingDocumentCount === 0;
+}
+
+export async function getAccountingPeriodOverview(periodKey: string) {
+  const { start, end } = getPeriodBounds(periodKey);
+  const [period, actions, matterRows, revenueRows, expenseRows, cashRows] = await Promise.all([
+    getPeriodByKey(periodKey),
+    (async () => {
+      const current = await getPeriodByKey(periodKey);
+      const db = await getDb();
+      if (!current || !db) return [];
+      return db.select({
+        id: accountingPeriodActions.id,
+        action: accountingPeriodActions.action,
+        reason: accountingPeriodActions.reason,
+        actorId: accountingPeriodActions.actorId,
+        actorName: users.name,
+        createdAt: accountingPeriodActions.createdAt,
+      }).from(accountingPeriodActions).leftJoin(users, eq(accountingPeriodActions.actorId, users.id)).where(eq(accountingPeriodActions.periodId, current.id)).orderBy(desc(accountingPeriodActions.createdAt));
+    })(),
+    listMatters(), listRevenues(), listExpenses(), listCashTransactions(),
+  ]);
+  const metrics = calculateDashboardMetrics({ matterRows, revenueRows, expenseRows, cashRows }, start, end);
+  const cashInPeriod = cashRows.filter(row => row.transactionDate >= start && row.transactionDate <= end);
+  const control = {
+    ...metrics.reconciliation,
+    missingDocumentCount: cashInPeriod.filter(row => !row.documentNumber).length,
+  };
+  return {
+    period: period ?? { id: null, periodKey, status: "open" as AccountingPeriodStatus, requestedBy: null, requestedAt: null, approvedBy: null, approvedAt: null, lockedBy: null, lockedAt: null, note: null },
+    actions,
+    control: { ...control, isReadyForApproval: isPeriodReady(control) },
+  };
+}
+
+async function recordPeriodAction(periodId: number, action: PeriodAction, actorId: number, reason?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.insert(accountingPeriodActions).values({ periodId, action, actorId, reason: reason || null });
+}
+
+export async function requestPeriodApproval(periodKey: string, actorId: number, note?: string) {
+  const overview = await getAccountingPeriodOverview(periodKey);
+  if (!overview.control.isReadyForApproval) throw new Error("Không thể gửi phê duyệt khi kỳ còn giao dịch chưa đối chiếu, chưa phân loại, thiếu số chứng từ hoặc chênh lệch liên sổ.");
+  const period = await ensurePeriod(periodKey);
+  if (period.status !== "open" && period.status !== "rejected") throw new Error("Kỳ này không ở trạng thái có thể gửi phê duyệt.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(accountingPeriods).set({ status: "pending_approval", requestedBy: actorId, requestedAt: new Date(), note: note || null }).where(eq(accountingPeriods.id, period.id));
+  await recordPeriodAction(period.id, "request", actorId, note);
+  return getAccountingPeriodOverview(periodKey);
+}
+
+export async function approvePeriod(periodKey: string, actorId: number, note?: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period || period.status !== "pending_approval") throw new Error("Kỳ này chưa ở trạng thái chờ phê duyệt.");
+  if (period.requestedBy === actorId) throw new Error("Người tạo yêu cầu không được tự phê duyệt kỳ kế toán.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(accountingPeriods).set({ status: "approved", approvedBy: actorId, approvedAt: new Date(), note: note || period.note }).where(eq(accountingPeriods.id, period.id));
+  await recordPeriodAction(period.id, "approve", actorId, note);
+  return getAccountingPeriodOverview(periodKey);
+}
+
+export async function rejectPeriod(periodKey: string, actorId: number, reason: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period || period.status !== "pending_approval") throw new Error("Kỳ này chưa ở trạng thái chờ phê duyệt.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(accountingPeriods).set({ status: "rejected", note: reason }).where(eq(accountingPeriods.id, period.id));
+  await recordPeriodAction(period.id, "reject", actorId, reason);
+  return getAccountingPeriodOverview(periodKey);
+}
+
+export async function lockPeriod(periodKey: string, actorId: number, note?: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period || period.status !== "approved") throw new Error("Chỉ kỳ đã phê duyệt mới được khóa sổ.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(accountingPeriods).set({ status: "locked", lockedBy: actorId, lockedAt: new Date(), note: note || period.note }).where(eq(accountingPeriods.id, period.id));
+  await recordPeriodAction(period.id, "lock", actorId, note);
+  return getAccountingPeriodOverview(periodKey);
+}
+
+export async function reopenPeriod(periodKey: string, actorId: number, reason: string) {
+  const period = await getPeriodByKey(periodKey);
+  if (!period || period.status !== "locked") throw new Error("Chỉ kỳ đã khóa mới được mở lại.");
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  await db.update(accountingPeriods).set({ status: "open", note: reason }).where(eq(accountingPeriods.id, period.id));
+  await recordPeriodAction(period.id, "reopen", actorId, reason);
+  return getAccountingPeriodOverview(periodKey);
 }
 
 export async function listMatters() {
@@ -159,6 +304,7 @@ export async function createRevenue(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
+  await assertPeriodMutable(input.serviceDate);
   const vatOutput = input.amountBeforeTax * input.vatRate;
   const totalAmount = input.amountBeforeTax + vatOutput;
   await db.insert(revenues).values({
@@ -180,6 +326,8 @@ export async function updateRevenue(id: number, input: Partial<{
   if (!db) throw new Error("Database unavailable");
   const current = await db.select().from(revenues).where(eq(revenues.id, id)).limit(1);
   if (!current[0]) throw new Error("Không tìm thấy dòng doanh thu");
+  await assertPeriodMutable(current[0].serviceDate);
+  if (input.serviceDate) await assertPeriodMutable(input.serviceDate);
   const amountBeforeTax = input.amountBeforeTax ?? Number(current[0].amountBeforeTax);
   const vatRate = input.vatRate ?? Number(current[0].vatRate);
   const totalAmount = amountBeforeTax * (1 + vatRate);
@@ -219,6 +367,7 @@ export async function createExpense(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
+  await assertPeriodMutable(input.expenseDate);
   const vatInput = input.amountBeforeTax * input.vatRate;
   const totalAmount = input.amountBeforeTax + vatInput;
   await db.insert(expenses).values({
@@ -241,6 +390,8 @@ export async function updateExpense(id: number, input: Partial<{
   if (!db) throw new Error("Database unavailable");
   const current = await db.select().from(expenses).where(eq(expenses.id, id)).limit(1);
   if (!current[0]) throw new Error("Không tìm thấy dòng chi phí");
+  await assertPeriodMutable(current[0].expenseDate);
+  if (input.expenseDate) await assertPeriodMutable(input.expenseDate);
   const amountBeforeTax = input.amountBeforeTax ?? Number(current[0].amountBeforeTax);
   const vatRate = input.vatRate ?? Number(current[0].vatRate);
   const totalAmount = amountBeforeTax * (1 + vatRate);
@@ -273,6 +424,7 @@ export async function createCashTransaction(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
+  await assertPeriodMutable(input.transactionDate);
   await db.insert(cashTransactions).values({
     ...input, amount: input.amount.toFixed(2), referenceId: input.referenceId ?? null, matterId: input.matterId ?? null,
     documentNumber: input.documentNumber || null,
@@ -288,6 +440,10 @@ export async function updateCashTransaction(id: number, input: Partial<{
 }>) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
+  const current = await db.select().from(cashTransactions).where(eq(cashTransactions.id, id)).limit(1);
+  if (!current[0]) throw new Error("Không tìm thấy giao dịch thu–chi");
+  await assertPeriodMutable(current[0].transactionDate);
+  if (input.transactionDate) await assertPeriodMutable(input.transactionDate);
   const { amount, documentNumber, ...rest } = input;
   await db.update(cashTransactions).set({
     ...rest,
@@ -300,7 +456,7 @@ export async function updateCashTransaction(id: number, input: Partial<{
 export async function getCashTransactionById(id: number) {
   const db = await getDb();
   if (!db) return undefined;
-  const rows = await db.select({ id: cashTransactions.id }).from(cashTransactions).where(eq(cashTransactions.id, id)).limit(1);
+  const rows = await db.select({ id: cashTransactions.id, transactionDate: cashTransactions.transactionDate }).from(cashTransactions).where(eq(cashTransactions.id, id)).limit(1);
   return rows[0];
 }
 
@@ -328,6 +484,9 @@ export async function createCashAttachment(input: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
+  const transaction = await getCashTransactionById(input.cashTransactionId);
+  if (!transaction) throw new Error("Không tìm thấy giao dịch thu–chi");
+  await assertPeriodMutable(transaction.transactionDate);
   await db.insert(cashAttachments).values(input);
   return { success: true };
 }
@@ -389,11 +548,37 @@ export async function getDashboardData(start?: Date, end?: Date) {
   return calculateDashboardMetrics({ matterRows, revenueRows, expenseRows, cashRows }, start, end);
 }
 
+export async function getReconciliationReport(periodKey: string) {
+  const { start, end } = getPeriodBounds(periodKey);
+  const [overview, cashRows] = await Promise.all([getAccountingPeriodOverview(periodKey), listCashTransactions()]);
+  const scopedRows = cashRows.filter(row => row.transactionDate >= start && row.transactionDate <= end);
+  const rows = await Promise.all(scopedRows.map(async row => ({
+    ...row,
+    attachmentCount: (await listCashAttachments(row.id)).length,
+  })));
+  return {
+    periodKey,
+    status: overview.period.status,
+    control: overview.control,
+    rows,
+  };
+}
+
 export async function deleteById(table: "matter" | "revenue" | "expense" | "cash", id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database unavailable");
   if (table === "matter") return db.delete(legalMatters).where(eq(legalMatters.id, id));
-  if (table === "revenue") return db.delete(revenues).where(eq(revenues.id, id));
-  if (table === "expense") return db.delete(expenses).where(eq(expenses.id, id));
+  if (table === "revenue") {
+    const current = await db.select({ serviceDate: revenues.serviceDate }).from(revenues).where(eq(revenues.id, id)).limit(1);
+    if (current[0]) await assertPeriodMutable(current[0].serviceDate);
+    return db.delete(revenues).where(eq(revenues.id, id));
+  }
+  if (table === "expense") {
+    const current = await db.select({ expenseDate: expenses.expenseDate }).from(expenses).where(eq(expenses.id, id)).limit(1);
+    if (current[0]) await assertPeriodMutable(current[0].expenseDate);
+    return db.delete(expenses).where(eq(expenses.id, id));
+  }
+  const current = await db.select({ transactionDate: cashTransactions.transactionDate }).from(cashTransactions).where(eq(cashTransactions.id, id)).limit(1);
+  if (current[0]) await assertPeriodMutable(current[0].transactionDate);
   return db.delete(cashTransactions).where(eq(cashTransactions.id, id));
 }

@@ -125,6 +125,30 @@ export const cashAttachments = mysqlTable("cashAttachments", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const accountingPeriods = mysqlTable("accountingPeriods", {
+  id: int("id").autoincrement().primaryKey(),
+  periodKey: varchar("periodKey", { length: 7 }).notNull().unique(),
+  status: mysqlEnum("status", ["open", "pending_approval", "rejected", "approved", "locked"]).default("open").notNull(),
+  requestedBy: int("requestedBy").references(() => users.id),
+  requestedAt: timestamp("requestedAt"),
+  approvedBy: int("approvedBy").references(() => users.id),
+  approvedAt: timestamp("approvedAt"),
+  lockedBy: int("lockedBy").references(() => users.id),
+  lockedAt: timestamp("lockedAt"),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const accountingPeriodActions = mysqlTable("accountingPeriodActions", {
+  id: int("id").autoincrement().primaryKey(),
+  periodId: int("periodId").notNull().references(() => accountingPeriods.id),
+  action: mysqlEnum("action", ["request", "approve", "reject", "lock", "reopen"]).notNull(),
+  reason: text("reason"),
+  actorId: int("actorId").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Client = typeof clients.$inferSelect;
@@ -133,3 +157,5 @@ export type Revenue = typeof revenues.$inferSelect;
 export type Expense = typeof expenses.$inferSelect;
 export type CashTransaction = typeof cashTransactions.$inferSelect;
 export type CashAttachment = typeof cashAttachments.$inferSelect;
+export type AccountingPeriod = typeof accountingPeriods.$inferSelect;
+export type AccountingPeriodAction = typeof accountingPeriodActions.$inferSelect;

@@ -29,3 +29,14 @@
 - [x] Bổ sung một báo cáo tổng hợp ẩn danh có số liệu quản trị ở mức tổng hợp hoặc trạng thái chưa có dữ liệu vào bản nháp WordPress.
 - [x] Lấy, kiểm tra và chia sẻ liên kết xem trước `preview=true` của bản nháp WordPress; lưu bằng chứng phản hồi không có cảnh báo nội dung.
 - [x] Cập nhật trang WordPress nháp ID 6 với bảng tổng hợp ẩn danh đã được người dùng chấp thuận, duy trì trạng thái draft.
+- [x] Rà soát mô hình dữ liệu, thủ tục nghiệp vụ và giao diện hiện hữu để xác định điểm tích hợp phê duyệt, khóa sổ và xuất báo cáo.
+- [x] Thiết kế trạng thái kỳ kế toán hàng tháng, nguyên tắc phân quyền người lập/người phê duyệt và nhật ký kiểm soát thay đổi.
+- [x] Triển khai yêu cầu phê duyệt, phê duyệt/từ chối và khóa/mở khóa sổ tháng với kiểm soát chặn sửa giao dịch trong kỳ đã khóa.
+- [x] Tạo báo cáo đối chiếu chứng từ và sổ sách có thể xuất ra Excel và PDF, bao gồm bộ lọc kỳ và trạng thái đối chiếu.
+- [x] Thêm logo Veritas được người dùng cung cấp vào nhận diện giao diện, cấu hình ứng dụng và khu vực điều hướng đáp ứng.
+- [x] Khởi tạo, viết, xác thực và đóng gói kỹ năng tái sử dụng cho quy trình quản trị kỳ kế toán, phê duyệt, khóa sổ và xuất đối chiếu.
+- [x] Bổ sung kiểm thử Vitest, kiểm tra responsive và tài liệu vận hành cho các chức năng mới trước khi lưu phiên bản.
+- [x] Cập nhật title, favicon và metadata ứng dụng để nhận diện Veritas nhất quán ngoài khu vực giao diện điều hướng.
+- [x] Viết hướng dẫn vận hành cho người dùng về gửi phê duyệt, phê duyệt/từ chối, khóa/mở kỳ và xuất báo cáo đối chiếu Excel/PDF.
+- [x] Đóng gói và gửi kỹ năng `veritas-monthly-accounting-close` cho người dùng sau khi hoàn tất nghiệm thu dự án.
+- [x] Đồng bộ phiên bản mới gồm quy trình khóa sổ, báo cáo đối chiếu, logo, hướng dẫn và bản di trú lên kho GitHub Veritas.
